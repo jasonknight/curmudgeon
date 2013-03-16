@@ -34,7 +34,7 @@ Currently, Curmudgeon only depends on libc in static mode, and pcre and other ge
 ```c
 cur_register_event(&app,"hello_world.*", 0,hello_world);
 // or
-cur_register_event(&app,"/hello_world/(?P<name>.*)/i", 0,hello_world);
+cur_register_event(&app,"/hello_world\\/(?P<name>.*)/i", 0,hello_world);
 ```
 
 Curmudgeon supports PCRE handler definitions including named captures. Still a bit experimental, the PCRE handling
