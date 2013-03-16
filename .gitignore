@@ -1,0 +1,10 @@
+*.o
+*~
+*.bak
+*.bin
+*.fcgi
+*.so
+*.a
+*.out
+build/
+src/app/
