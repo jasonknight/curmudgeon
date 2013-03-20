@@ -30,7 +30,7 @@ enum cur_return_codes {
 typedef struct event event_t;
 typedef struct adapter adapter_t;
 typedef struct regex regex_t;
-typedef int (*callback_t)(event_t *);
+typedef int (*callback_t)(event_t **);
 typedef struct registered_event {
     regex_t * regex;
     callback_t  callback;
@@ -61,6 +61,7 @@ struct regex {
     unsigned char * names;
     int options; // options used
     int offset;
+    short used;
     char ** named_captures;
     char ** nummed_captures;
     char *  (*named)(regex_t *,char *); 
@@ -69,11 +70,12 @@ struct regex {
 int              cur_init( curmudgeon_t ** cur, int num_events ); // called at startup
 int              cur_done( curmudgeon_t ** cur );               // called to clean up when done.
 int              cur_parse_request( const char * url, event_t ** e );
-int              cur_call_handler( curmudgeon_t * cur, event_t * e );
+int              cur_call_handler( curmudgeon_t * cur, event_t ** e );
 int              cur_register_event( curmudgeon_t ** cur, char * pattern, int opts, callback_t callback );
 int              cur_list_events( curmudgeon_t ** cur );
 int              cur_match(regex_t ** regex,char * haystack,...);
-regex_t *        cur_regex(char * pattern);
+int              cur_regex(regex_t **,char * pattern);
+int              cur_free_regex(regex_t **);
 
 
 
@@ -113,19 +115,19 @@ struct db_col {
     int name_length;
 };
 
-int         cur_mysql( curmudgeon_t ** cur, char * host, char * user, char * pass);
-int         cur_connect( curmudgeon_t ** cur );
-int         cur_disconnect( curmudgeon_t * cur);
-int         cur_exec( curmudgeon_t ** cur, char * query );
-int         cur_select_db( curmudgeon_t ** cur, char * db);
-int         cur_query( curmudgeon_t ** cur, char * query);
-int         cur_free_result( curmudgeon_t ** cur );
-int         cur_next( curmudgeon_t * cur, db_row_t ** row );
-int         cur_next_as_json( curmudgeon_t * cur, json_t ** obj,db_row_t **);
-int         cur_result_as_json( curmudgeon_t ** cur, json_t ** obj);
+int         db_mysql( curmudgeon_t ** cur, char * host, char * user, char * pass);
+int         db_connect( curmudgeon_t ** cur );
+int         db_disconnect( curmudgeon_t * cur);
+int         db_exec( curmudgeon_t ** cur, char * query );
+int         db_select_db( curmudgeon_t ** cur, char * db);
+int         db_query( curmudgeon_t ** cur, char * query);
+int         db_free_result( curmudgeon_t ** cur );
+int         db_next( curmudgeon_t * cur, db_row_t ** row );
+int         db_next_as_json( curmudgeon_t * cur, json_t ** obj,db_row_t **);
+int         db_result_as_json( curmudgeon_t ** cur, json_t ** obj);
 
-json_t *    cur_find_by(curmudgeon_t ** cur, char * table, char * field, char * value, char * select);
-json_t *    cur_find_by_sql(curmudgeon_t ** cur, char * query, ...);
+int         db_find_by(curmudgeon_t ** cur, json_t **, char * table, char * field, char * value, char * select);
+int         db_find_by_sql(curmudgeon_t ** cur, json_t **, char * query, ...);
 
 // Private internal functions, not really intended
 // to be used by app developers, though they can if
@@ -134,4 +136,6 @@ json_t *    cur_find_by_sql(curmudgeon_t ** cur, char * query, ...);
 char *           _get_pcre_error(int code);
 char *           _regex_nummed(regex_t * re,int i);
 char *           _regex_named(regex_t * re,char * n);
+char *           _strdup (char * src);
+int              _compare(const char * s1, const char * s2); 
 #endif

@@ -36,7 +36,7 @@ int cur_done( curmudgeon_t ** to_free ) {
     // should close out that connection.
     if ( cur->conn ) {
         if (cur->conn->connected == 1) {
-            cur_disconnect(cur);
+            db_disconnect(cur);
         }
         free(cur->conn);
     }
@@ -61,26 +61,27 @@ int cur_parse_request( const char * url, event_t ** dest ) {
     e->argc = argc;
     char * token;
     char * cpy;
-    cpy = strdup(url);
+    cpy = _strdup(url);
     cpy++; // skip the first char
     token = strsep(&cpy,"/");
-    e->name = strdup(token);
+    e->name = _strdup(token);
     i = 0;
     while( ( token = strsep(&cpy,"/")) ) {
-        e->args[i] = strdup(token);
+        e->args[i] = _strdup(token);
         i++;
     }
     *dest = e;
     return CUR_OK;
 }
-int cur_call_handler( curmudgeon_t * cur,event_t * e ) { 
+int cur_call_handler( curmudgeon_t * cur,event_t ** e_dest ) { 
     int i;
     registered_event_t ** events = cur->events;
+    event_t * e = *e_dest;
     for (i = 0; i <= cur->events_length; i++) {
         registered_event_t * re = events[i];
         if (cur_match(&re->regex,e->full_url) == CUR_OK) {
             e->cur = cur;
-            return cur->events[i]->callback(e);
+            return cur->events[i]->callback(&e);
         }
     }
     return CUR_HANDLER_NOT_FOUND;
@@ -93,7 +94,9 @@ int cur_register_event( curmudgeon_t ** dest, char * pattern, int opts, callback
         cur->max_events += 3;
     }
     registered_event_t * re = malloc(sizeof(registered_event_t));
-    re->regex = cur_regex(pattern); 
+    regex_t * reg = NULL;
+    cur_regex(&reg,pattern); 
+    re->regex = reg;
     re->callback = callback;
     cur->events[cur->events_length] = re;
     return CUR_OK;
@@ -102,202 +105,14 @@ int cur_list_events( curmudgeon_t ** cur ) {
     
     return CUR_OK;
 }
-
-
-// mysql stuff
-
-int cur_mysql( curmudgeon_t ** dest, char * host, char * user, char * pass) {
-    curmudgeon_t * cur = *dest;
-    adapter_t * a = malloc(sizeof(adapter_t));
-    a->type = CUR_MYSQL;
-    a->user = user;
-    a->pass = pass;
-    a->host = host;
-    a->port = 3306;
-    a->myconn = mysql_init(NULL);
-    if (a->myconn == NULL) {
-        SET_MYSQL_ERROR
-    }
-    a->connected = 0;
-    cur->conn = a;
-    return CUR_OK;
-}
-int cur_connect( curmudgeon_t ** dest ) {
-    curmudgeon_t * cur = *dest;
-    if (cur->conn->type == CUR_MYSQL) {
-        adapter_t * a = cur->conn;
-        if (mysql_real_connect(a->myconn, a->host, a->user, a->pass, NULL, 0, NULL, 0) == NULL) {
-            SET_MYSQL_ERROR
-        } else {
-            a->connected = 1;
-            a->myresult = NULL;
-        }
-    }
-    return CUR_OK;
-}
-int cur_disconnect( curmudgeon_t * cur) {
-    if (cur->conn->type == CUR_MYSQL) {
-        mysql_close(cur->conn->myconn);
-        cur->conn->connected = 0;
-    }
-    return CUR_OK;
-}
-int cur_exec( curmudgeon_t ** dest, char * query) {
-    curmudgeon_t * cur = *dest;
-    adapter_t * a = cur->conn;
-    assert(a->connected == 1); 
-    if (a->type == CUR_MYSQL) {
-        if ( mysql_query(a->myconn,query) != 0) {
-           SET_MYSQL_ERROR 
-        }
-    }
-    return CUR_OK;
-}
-int cur_select_db( curmudgeon_t ** dest, char * db) {
-    curmudgeon_t * cur = *dest;
-    adapter_t * a = cur->conn;
-    assert(a->connected == 1); 
-    if (a->type == CUR_MYSQL) {
-        if ( mysql_select_db(a->myconn,db) != 0) {
-           SET_MYSQL_ERROR 
-        }
-    }
-    return CUR_OK;
-}
-int cur_query( curmudgeon_t ** dest, char * query) {
-    curmudgeon_t * cur = *dest;
-    adapter_t * a = cur->conn;
-    assert(a->connected == 1); 
-    assert(a->myresult == NULL);
-    if (a->type == CUR_MYSQL) {
-        if ( mysql_query(a->myconn,query) != 0) {
-           SET_MYSQL_ERROR 
-        } else {
-            a->myresult = mysql_store_result(a->myconn);
-        }
-    }
-    return CUR_OK;
-}
-int cur_free_result( curmudgeon_t ** dest ) {
-    curmudgeon_t * cur = *dest;
-    adapter_t * a = cur->conn;
-    assert(a->connected == 1); 
-    assert(a->myresult != NULL);
-    if (a->type == CUR_MYSQL) {
-        mysql_free_result(a->myresult);
-        a->myresult = NULL;
-    }
-    return CUR_OK;
-}
-int cur_next( curmudgeon_t * cur, db_row_t ** dest ) {
-    db_row_t * row = *dest;
-    adapter_t *     a = cur->conn;
-    assert(a->connected == 1); 
-    assert(a->myresult != NULL);
-    MYSQL_ROW       mrow;
-    MYSQL_FIELD *   field;
-    int             num_fields = 0;
-    int             i = 0;
-    num_fields = mysql_num_fields(a->myresult);
-    if (!row) { 
-        row = malloc(sizeof(db_row_t));
-        row->cols = NULL;
-        row->field_names = malloc(sizeof(char *) * num_fields);
-    }
-    assert(row != NULL);
-    if (row->cols) {
-        free(row->cols);
-    }
-    row->cols = malloc(sizeof(db_col_t) * num_fields);
-    assert(row->cols != NULL);
-    row->length = num_fields;
-    i = 0;
-    while ( (field = mysql_fetch_field(a->myresult)) ) {
-       row->field_names[i] = strdup(field->name);
-       i++;
-    }
-    if ( (mrow = mysql_fetch_row(a->myresult)) ) {
-        for (i = 0; i < num_fields; i++) {
-            db_col_t * col = malloc(sizeof(db_col_t));
-            assert(col != NULL);
-            col->name = row->field_names[i]; 
-            if (mrow[i]) {
-                col->value = strdup(mrow[i]);
-            } else {
-                col->value = "NULL";
-            }
-            row->cols[i] = col;
-        } 
-        *dest = row;
-        return CUR_OK;
-    } else {
-        free(row->field_names);
-        free(row->cols);
-        free(row);
-        return CUR_DB_DONE;
-    }
-}
-int cur_next_as_json( curmudgeon_t * cur, json_t ** dest,db_row_t ** rdest) {
-    int i = 0;
-    json_t * obj = json_object();
-    assert(obj != NULL);
-    if (cur_next(cur,rdest) == CUR_OK) {
-        db_row_t * row = *rdest;
-        for (i = 0; i < row->length; i++) {
-            json_t * field = json_string(row->cols[i]->value);
-            assert(field != NULL);
-            json_object_set(obj,row->cols[i]->name,field);
-        } 
-        *dest = obj;
-        return CUR_OK;
-    } else {
-        return CUR_DB_DONE;
-    }
-}
-int cur_result_as_json( curmudgeon_t ** cdest, json_t ** odest) {
-        json_t * jrow = NULL;
-        db_row_t * row2 = NULL;
-        json_t * arr = json_array();
-        while ( cur_next_as_json(*cdest,&jrow,&row2) == CUR_OK ) {
-            json_array_append(arr,jrow);
-        }
-        cur_free_result(cdest);
-        *odest = arr;
-        return CUR_OK;
-}
-json_t * cur_find_by(curmudgeon_t ** cur, char * table, char * field, char * value, char * select) {
-    if (!select) {
-        select = "*";
-    }
-    char * fmt = "SELECT %s FROM `%s` WHERE `%s` = '%s'";
-    char * query = malloc(strlen(fmt) + strlen(field) + strlen(value) + strlen(table) + strlen(select));
-    sprintf(query,fmt,select,table,field,value);
-    cur_query(cur,query);
-    json_t * all_rows = NULL;
-    cur_result_as_json(cur,&all_rows);
-    return all_rows;
-}
-json_t *    cur_find_by_sql(curmudgeon_t ** cur, char * fmt, ...) {
-    va_list sargs;
-    va_start(sargs,fmt);
-    char * tmp_str;
-    int char_count = strlen(fmt);
-    while( (tmp_str = va_arg(sargs,char *)) ) {
-        char_count += strlen(tmp_str); 
-    }
-    char * query = malloc(sizeof(char) * char_count);
-    va_start(sargs,fmt);
-    vsprintf(query,fmt,sargs);
-    json_t * all_rows = NULL;
-    cur_query(cur,query);
-    cur_result_as_json(cur,&all_rows);
-    return all_rows;
-}
 int cur_match(regex_t ** reg_dest, char * haystack, ...) {
     va_list iargs;
     va_start(iargs,haystack);
     int offset = va_arg(iargs,int);
     regex_t * re = *reg_dest; 
+    if (re->used == 1) {
+    
+    }
     int rc;
     int i = 0;
     int j = 0;
@@ -308,49 +123,59 @@ int cur_match(regex_t ** reg_dest, char * haystack, ...) {
     rc = pcre_exec(re->code, re->study, haystack, hlength, 0, 0, ovector, ovecsize); 
     if (rc > 0) {
         re->offset = rc;
-        if (re->namec > 0) {
-          char * buffer = malloc(sizeof(char) * re->name_entry_size);
-          re->named_captures = malloc(sizeof(char*) * (re->namec * 2));
-          unsigned char * names = re->names;    
-          int nc_index = 0;
-          while (i <= re->namec) {
-              int index = *(++names); 
-              j = 0;
-              while(*(++names) != '\0') {
-                buffer[j] = *names;  
-                j++;
-              }
-              buffer[j] = '\0';
-              if (index > 0) {
-                  pcre_get_named_substring(re->code,
-                                          haystack, 
-                                          ovector,
-                                          re->namec, 
-                                          buffer,
-                                          &value);
-                  re->named_captures[nc_index] = strdup(buffer);
-                  re->named_captures[nc_index + 1] = strdup(value);
-                  nc_index += 2;
-              } 
-              ++names; 
-              i++;
-          } // end while  < re->namec 
-        } // end if namec > 0
+        re->used = 1;
+        // if we put this first, then the second list can
+        // point to entries here
         if (re->captc > 0) {
             re->nummed_captures = malloc(sizeof(char *) * (re->captc + 1));
             for (i = 0; i <= re->captc; i++) {
                 pcre_get_substring(haystack, ovector,
                                    (ovecsize / 3), i,
                                    &value); 
-                re->nummed_captures[i] = strdup(value);
+                re->nummed_captures[i] = value;
             }
         }
+        if (re->namec > 0) {
+          char * buffer = malloc(sizeof(char) * re->name_entry_size);
+          re->named_captures = malloc(sizeof(char*) * (re->namec * 2));
+          unsigned char * names = re->names;    
+          int nc_index = 0;
+          i = 0;
+          while (i <= re->namec) {
+              int index = *(++names); 
+              j = 0;
+              // We need to do this because of the unsigned charness of
+              // the entry in the table. It makes it harder to search and
+              // compare. 
+              while(*(++names) != '\0') {
+                  buffer[j] = *names;
+                  j++;
+              }
+              buffer[j] = '\0';
+              if (index > 0) {
+                  //pcre_get_named_substring(re->code,
+                  //                        haystack, 
+                  //                        ovector,
+                  //                        re->namec, 
+                  //                        buffer,
+                  //                        &value);
+                  re->named_captures[nc_index] = strdup(buffer);
+                  // thus we save ourself a dup of that data... 
+                  // remember that the data is actually a pointer to
+                  // what PCRE is storing...
+                  re->named_captures[nc_index + 1] = re->nummed_captures[index];
+                  nc_index += 2;
+              } 
+              ++names; 
+              i++;
+          } // end while  < re->namec 
+        } // end if namec > 0
+        
         return CUR_OK;
     }
     return rc;
 }
-regex_t * cur_regex(char * pattern) {
-    regex_t * re;
+int cur_regex(regex_t ** re_dest,char * pattern) {
     char * errptr = malloc(sizeof(char) *1024);
     int erroffset;
     int errcodeptr = 0;
@@ -423,11 +248,25 @@ regex_t * cur_regex(char * pattern) {
         // Treat this like a direct pattern
         buffer = pattern;
     }
-    re = malloc(sizeof(regex_t));
-    re->pattern = pattern;
+    regex_t * re = *re_dest;
+    // we need to institute a null check here so
+    // that we can reuse the regex.
+    if ( ! re) {
+        printf("allocating re\n");
+        re = malloc(sizeof(regex_t));
+    } else {
+        free(re->pattern);
+        pcre_free(re->code);
+        if (re->study) {
+            pcre_free(re->study);
+        }
+    }
+    re->pattern = _strdup(pattern);
     re->options = options;
     re->named = _regex_named;
     re->capt = _regex_nummed;
+    re->study = NULL;
+    re->used = 0;
     re->code = pcre_compile2(buffer,options,&errcodeptr,&errptr, &erroffset,NULL);
     if ( ! re->code ) {
         printf("%d %s\n",errcodeptr,_get_pcre_error(errcodeptr));
@@ -440,9 +279,225 @@ regex_t * cur_regex(char * pattern) {
         rc = pcre_fullinfo(re->code,re->study,PCRE_INFO_NAMECOUNT, &re->namec);     
         rc = pcre_fullinfo(re->code,re->study,PCRE_INFO_NAMEENTRYSIZE, &re->name_entry_size);     
         rc = pcre_fullinfo(re->code,re->study,PCRE_INFO_NAMETABLE, &re->names);     
+        printf("studying is complete as well as info\n");
     }
-   return re; 
+    // because we might have malloced so we need to ensure that the pointer is updated
+    // we only malloc when we were passed NULL, so this should not be leaking.
+    *re_dest = re;
+   return CUR_OK;
 }
+int cur_free_regex(regex_t ** re_dest) {
+    regex_t * re = *re_dest;
+    if (re->used == 1) {
+        // first we free the named capture strings
+        int nc_index = 0;
+        free(re->named_captures);
+        re->named_captures = NULL;
+        free(re->nummed_captures);
+        re->nummed_captures = NULL;
+    }
+    if (re->study) {
+        pcre_free(re->study);
+        re->study = NULL;
+    }
+    if (re->code) {
+        pcre_free(re->code);
+        re->code = NULL;
+    }
+    free(re);
+    re = NULL;
+    *re_dest = re;
+    return CUR_OK;
+}
+
+// mysql stuff
+
+int db_mysql( curmudgeon_t ** dest, char * host, char * user, char * pass) {
+    curmudgeon_t * cur = *dest;
+    adapter_t * a = malloc(sizeof(adapter_t));
+    a->type = CUR_MYSQL;
+    a->user = user;
+    a->pass = pass;
+    a->host = host;
+    a->port = 3306;
+    a->myconn = mysql_init(NULL);
+    if (a->myconn == NULL) {
+        SET_MYSQL_ERROR
+    }
+    a->connected = 0;
+    cur->conn = a;
+    return CUR_OK;
+}
+int db_connect( curmudgeon_t ** dest ) {
+    curmudgeon_t * cur = *dest;
+    if (cur->conn->type == CUR_MYSQL) {
+        adapter_t * a = cur->conn;
+        if (mysql_real_connect(a->myconn, a->host, a->user, a->pass, NULL, 0, NULL, 0) == NULL) {
+            SET_MYSQL_ERROR
+        } else {
+            a->connected = 1;
+            a->myresult = NULL;
+        }
+    }
+    return CUR_OK;
+}
+int db_disconnect( curmudgeon_t * cur) {
+    if (cur->conn->type == CUR_MYSQL) {
+        mysql_close(cur->conn->myconn);
+        cur->conn->connected = 0;
+    }
+    return CUR_OK;
+}
+int db_exec( curmudgeon_t ** dest, char * query) {
+    curmudgeon_t * cur = *dest;
+    adapter_t * a = cur->conn;
+    assert(a->connected == 1); 
+    if (a->type == CUR_MYSQL) {
+        if ( mysql_query(a->myconn,query) != 0) {
+           SET_MYSQL_ERROR 
+        }
+    }
+    return CUR_OK;
+}
+int db_select_db( curmudgeon_t ** dest, char * db) {
+    curmudgeon_t * cur = *dest;
+    adapter_t * a = cur->conn;
+    assert(a->connected == 1); 
+    if (a->type == CUR_MYSQL) {
+        if ( mysql_select_db(a->myconn,db) != 0) {
+           SET_MYSQL_ERROR 
+        }
+    }
+    return CUR_OK;
+}
+int db_query( curmudgeon_t ** dest, char * query) {
+    curmudgeon_t * cur = *dest;
+    adapter_t * a = cur->conn;
+    assert(a->connected == 1); 
+    assert(a->myresult == NULL);
+    if (a->type == CUR_MYSQL) {
+        if ( mysql_query(a->myconn,query) != 0) {
+           SET_MYSQL_ERROR 
+        } else {
+            a->myresult = mysql_store_result(a->myconn);
+        }
+    }
+    return CUR_OK;
+}
+int db_free_result( curmudgeon_t ** dest ) {
+    curmudgeon_t * cur = *dest;
+    adapter_t * a = cur->conn;
+    assert(a->connected == 1); 
+    assert(a->myresult != NULL);
+    if (a->type == CUR_MYSQL) {
+        mysql_free_result(a->myresult);
+        a->myresult = NULL;
+    }
+    return CUR_OK;
+}
+int db_next( curmudgeon_t * cur, db_row_t ** dest ) {
+    db_row_t * row = *dest;
+    adapter_t *     a = cur->conn;
+    assert(a->connected == 1); 
+    assert(a->myresult != NULL);
+    MYSQL_ROW       mrow;
+    MYSQL_FIELD *   field;
+    int             num_fields = 0;
+    int             i = 0;
+    num_fields = mysql_num_fields(a->myresult);
+    if (!row) { 
+        row = malloc(sizeof(db_row_t));
+        row->cols = NULL;
+        row->field_names = malloc(sizeof(char *) * num_fields);
+    }
+    assert(row != NULL);
+    if (row->cols) {
+        free(row->cols);
+    }
+    row->cols = malloc(sizeof(db_col_t) * num_fields);
+    assert(row->cols != NULL);
+    row->length = num_fields;
+    i = 0;
+    while ( (field = mysql_fetch_field(a->myresult)) ) {
+       row->field_names[i] = _strdup(field->name);
+       i++;
+    }
+    if ( (mrow = mysql_fetch_row(a->myresult)) ) {
+        for (i = 0; i < num_fields; i++) {
+            db_col_t * col = malloc(sizeof(db_col_t));
+            assert(col != NULL);
+            col->name = row->field_names[i]; 
+            if (mrow[i]) {
+                col->value = _strdup(mrow[i]);
+            } else {
+                col->value = "NULL";
+            }
+            row->cols[i] = col;
+        } 
+        *dest = row;
+        return CUR_OK;
+    } else {
+        free(row->field_names);
+        free(row->cols);
+        free(row);
+        return CUR_DB_DONE;
+    }
+}
+int db_next_as_json( curmudgeon_t * cur, json_t ** dest,db_row_t ** rdest) {
+    int i = 0;
+    json_t * obj = json_object();
+    assert(obj != NULL);
+    if (db_next(cur,rdest) == CUR_OK) {
+        db_row_t * row = *rdest;
+        for (i = 0; i < row->length; i++) {
+            json_t * field = json_string(row->cols[i]->value);
+            assert(field != NULL);
+            json_object_set(obj,row->cols[i]->name,field);
+        } 
+        *dest = obj;
+        return CUR_OK;
+    } else {
+        return CUR_DB_DONE;
+    }
+}
+int db_result_as_json( curmudgeon_t ** cdest, json_t ** odest) {
+        json_t * jrow = NULL;
+        db_row_t * row2 = NULL;
+        json_t * arr = json_array();
+        while ( db_next_as_json(*cdest,&jrow,&row2) == CUR_OK ) {
+            json_array_append(arr,jrow);
+        }
+        db_free_result(cdest);
+        *odest = arr;
+        return CUR_OK;
+}
+int db_find_by(curmudgeon_t ** cur, json_t ** all_rows,char * table, char * field, char * value, char * select) {
+    if (!select) {
+        select = "*";
+    }
+    char * fmt = "SELECT %s FROM `%s` WHERE `%s` = '%s'";
+    char * query = malloc(strlen(fmt) + strlen(field) + strlen(value) + strlen(table) + strlen(select));
+    sprintf(query,fmt,select,table,field,value);
+    db_query(cur,query);
+    db_result_as_json(cur,all_rows);
+    return CUR_OK;
+}
+int db_find_by_sql(curmudgeon_t ** cur,json_t ** all_rows, char * fmt, ...) {
+    va_list sargs;
+    va_start(sargs,fmt);
+    char * tmp_str;
+    int char_count = strlen(fmt);
+    while( (tmp_str = va_arg(sargs,char *)) ) {
+        char_count += strlen(tmp_str); 
+    }
+    char * query = malloc(sizeof(char) * char_count);
+    va_start(sargs,fmt);
+    vsprintf(query,fmt,sargs);
+    db_query(cur,query);
+    db_result_as_json(cur,all_rows);
+    return CUR_OK;
+}
+
 
 // Private cur functions
 //
@@ -613,10 +668,10 @@ char * _get_pcre_error(int code) {
 }
 char * _regex_named(regex_t * re,char * n) {
     int i;
-    for (i = 0; i < re->namec; i += 2) {
+    for (i = 0; i <= re->namec; i++) {
         char * key = re->named_captures[i];
-        if (strcmp(key,n) == 0) {
-            return re->named_captures[i+1];
+        if (_compare(key,n) == 0) {
+            return re->nummed_captures[i+1];
         }
     }
     return NULL;
@@ -627,4 +682,19 @@ char * _regex_nummed(regex_t * re, int num) {
     } else {
         return NULL;
     }
+}
+char * _strdup (char * src) {
+    char * ret = malloc(sizeof(char) * ( strlen(src) + 4 ) );
+    strcpy(ret,src);
+    return ret;
+}
+int _compare(const char * s1, const char * s2) {
+    int i;
+    int l = strlen(s2);
+    for (i = 0; i < l; i++) {
+        if (s1[i] != s2[i]) {
+            return -1;
+        }
+    }
+    return 0;
 }
