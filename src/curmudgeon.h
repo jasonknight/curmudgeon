@@ -51,19 +51,36 @@ struct event {
     curmudgeon_t * cur;
 };
 struct regex {
+    // This is the pattern, we keep it for some
+    // calls to pcre which use the pattern sometimes
+    // as a kind of reference...
     char * pattern;
+    // This is the code, possibly jitted by
+    // pcre that contains the automaton for
+    // matching the regex
     pcre * code;
+    // we pre-study all of the pcre regexes
+    // this just collects information etc
     pcre_extra * study;
+    // We also extract some info from pcre
+    // for future calls
     int backrefc; //back ref count
     int captc; // capture count
     int namec; // named capt count
     int name_entry_size; // largest name
     unsigned char * names;
     int options; // options used
-    int offset;
-    short used;
-    char ** named_captures;
-    char ** nummed_captures;
+    // a pcre list that contains to capture offsets
+    int * ovector;
+    short used; // just a tag to see if this has already been used
+    // if so, we shouldn't allocate stuff.
+    char * haystack; // used when getting captures because those
+    // are only stored as offsets. This should be a pointer to the
+    // original string passed in. If that string is freed, we're
+    // fucked, but that's up to the user.
+    //
+    // These are overriddable functions I think we should/could expand
+    // the system to allow overridding most functions.
     char *  (*named)(regex_t *,char *); 
     char *  (*capt)(regex_t *,int); 
 };

@@ -24,11 +24,8 @@ int main(void) {
         int rc = cur_match(&re,"/hello_world/something/aboutelse",0);
         if ( rc == CUR_OK ) {
             int i;
-            for (i = 0; i <re->namec * 2; i++) {
-                printf("Named: %s\n",re->named_captures[i]);
-            }
             for (i = 0; i <= re->captc; i++) {
-                printf("Nummed: %d -> %s\n",i,re->nummed_captures[i]);
+                printf("Nummed: %d -> %s\n",i,re->capt(re,i));
             }
         } else {
             printf("it did not match %d\n",rc);
