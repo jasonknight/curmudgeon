@@ -4,29 +4,79 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.9~svn20110310	//
-_compare	curmudgeon.c	/^int _compare(const char * s1, const char * s2) {$/;"	f
-_get_pcre_error	curmudgeon.c	/^char * _get_pcre_error(int code) {$/;"	f
-_regex_named	curmudgeon.c	/^char * _regex_named(regex_t * re,char * n) {$/;"	f
-_regex_nummed	curmudgeon.c	/^char * _regex_nummed(regex_t * re, int num) {$/;"	f
-_strdup	curmudgeon.c	/^char * _strdup (char * src) {$/;"	f
-cur_call_handler	curmudgeon.c	/^int cur_call_handler( curmudgeon_t * cur,event_t ** e_dest ) { $/;"	f
-cur_done	curmudgeon.c	/^int cur_done( curmudgeon_t ** to_free ) {$/;"	f
-cur_free_regex	curmudgeon.c	/^int cur_free_regex(regex_t ** re_dest) {$/;"	f
-cur_init	curmudgeon.c	/^int cur_init( curmudgeon_t ** dest, int num_events ) {$/;"	f
-cur_list_events	curmudgeon.c	/^int cur_list_events( curmudgeon_t ** cur ) {$/;"	f
-cur_match	curmudgeon.c	/^int cur_match(regex_t ** reg_dest, char * haystack, ...) {$/;"	f
-cur_parse_request	curmudgeon.c	/^int cur_parse_request( const char * url, event_t ** dest ) {$/;"	f
-cur_regex	curmudgeon.c	/^int cur_regex(regex_t ** re_dest,char * pattern) {$/;"	f
-cur_register_event	curmudgeon.c	/^int cur_register_event( curmudgeon_t ** dest, char * pattern, int opts, callback_t callback ) {$/;"	f
-db_connect	curmudgeon.c	/^int db_connect( curmudgeon_t ** dest ) {$/;"	f
-db_disconnect	curmudgeon.c	/^int db_disconnect( curmudgeon_t * cur) {$/;"	f
-db_exec	curmudgeon.c	/^int db_exec( curmudgeon_t ** dest, char * query) {$/;"	f
-db_find_by	curmudgeon.c	/^int db_find_by(curmudgeon_t ** cur, json_t ** all_rows,char * table, char * field, char * value, char * select) {$/;"	f
-db_find_by_sql	curmudgeon.c	/^int db_find_by_sql(curmudgeon_t ** cur,json_t ** all_rows, char * fmt, ...) {$/;"	f
-db_free_result	curmudgeon.c	/^int db_free_result( curmudgeon_t ** dest ) {$/;"	f
-db_mysql	curmudgeon.c	/^int db_mysql( curmudgeon_t ** dest, char * host, char * user, char * pass) {$/;"	f
-db_next	curmudgeon.c	/^int db_next( curmudgeon_t * cur, db_row_t ** dest ) {$/;"	f
-db_next_as_json	curmudgeon.c	/^int db_next_as_json( curmudgeon_t * cur, json_t ** dest,db_row_t ** rdest) {$/;"	f
-db_query	curmudgeon.c	/^int db_query( curmudgeon_t ** dest, char * query) {$/;"	f
-db_result_as_json	curmudgeon.c	/^int db_result_as_json( curmudgeon_t ** cdest, json_t ** odest) {$/;"	f
-db_select_db	curmudgeon.c	/^int db_select_db( curmudgeon_t ** dest, char * db) {$/;"	f
+CURMUDGEON_H	curmudgeon.h	2;"	d
+CUR_CANNOT_FREE	curmudgeon.h	/^    CUR_CANNOT_FREE,$/;"	e	enum:cur_return_codes
+CUR_CUR_ALLOC_FAILED	curmudgeon.h	/^    CUR_CUR_ALLOC_FAILED,$/;"	e	enum:cur_return_codes
+CUR_DB_DONE	curmudgeon.h	/^    CUR_DB_DONE,$/;"	e	enum:cur_return_codes
+CUR_DB_ERROR	curmudgeon.h	/^    CUR_DB_ERROR,$/;"	e	enum:cur_return_codes
+CUR_EVENTS_ALLOC_FAILED	curmudgeon.h	/^    CUR_EVENTS_ALLOC_FAILED,$/;"	e	enum:cur_return_codes
+CUR_HANDLER_NOT_FOUND	curmudgeon.h	/^    CUR_HANDLER_NOT_FOUND,$/;"	e	enum:cur_return_codes
+CUR_MYSQL	curmudgeon.h	/^    CUR_MYSQL$/;"	e	enum:cur_adapters
+CUR_OK	curmudgeon.h	/^    CUR_OK,$/;"	e	enum:cur_return_codes
+CUR_SCHEMA_UPTODATE	curmudgeon.h	/^    CUR_SCHEMA_UPTODATE$/;"	e	enum:cur_return_codes
+SET_MYSQL_ERROR	curmudgeon.h	15;"	d
+adapter	curmudgeon.h	/^struct adapter {$/;"	s
+adapter_t	curmudgeon.h	/^typedef struct adapter adapter_t;$/;"	t	typeref:struct:adapter
+argc	curmudgeon.h	/^    int argc;$/;"	m	struct:event
+args	curmudgeon.h	/^    char ** args;$/;"	m	struct:event
+backrefc	curmudgeon.h	/^    int backrefc; \/\/back ref count$/;"	m	struct:regex
+callback	curmudgeon.h	/^    callback_t  callback;$/;"	m	struct:registered_event
+callback_t	curmudgeon.h	/^typedef int (*callback_t)(event_t **);$/;"	t
+capt	curmudgeon.h	/^    char *  (*capt)(regex_t *,int); $/;"	m	struct:regex
+captc	curmudgeon.h	/^    int captc; \/\/ capture count$/;"	m	struct:regex
+code	curmudgeon.h	/^    pcre * code;$/;"	m	struct:regex
+cols	curmudgeon.h	/^    db_col_t ** cols;$/;"	m	struct:db_row
+connected	curmudgeon.h	/^    short           connected;$/;"	m	struct:adapter
+cur	curmudgeon.h	/^    curmudgeon_t * cur;$/;"	m	struct:event
+cur_adapters	curmudgeon.h	/^enum cur_adapters {$/;"	g
+cur_return_codes	curmudgeon.h	/^enum cur_return_codes {$/;"	g
+curmudgeon	curmudgeon.h	/^typedef struct curmudgeon {$/;"	s
+curmudgeon_t	curmudgeon.h	/^} curmudgeon_t;$/;"	t	typeref:struct:curmudgeon
+database_name	curmudgeon.h	/^    char *          database_name;$/;"	m	struct:adapter
+db_col	curmudgeon.h	/^struct db_col {$/;"	s
+db_col_t	curmudgeon.h	/^typedef struct db_col db_col_t;$/;"	t	typeref:struct:db_col
+db_row	curmudgeon.h	/^struct db_row {$/;"	s
+db_row_t	curmudgeon.h	/^typedef struct db_row db_row_t;$/;"	t	typeref:struct:db_row
+event	curmudgeon.h	/^struct event {$/;"	s
+event_t	curmudgeon.h	/^typedef struct event event_t;$/;"	t	typeref:struct:event
+events	curmudgeon.h	/^    registered_event_t ** events;$/;"	m	struct:curmudgeon
+events_length	curmudgeon.h	/^    int events_length;$/;"	m	struct:curmudgeon
+field_names	curmudgeon.h	/^    char ** field_names;$/;"	m	struct:db_row
+flags	curmudgeon.h	/^    unsigned long   flags;$/;"	m	struct:adapter
+full_url	curmudgeon.h	/^    char * full_url;$/;"	m	struct:event
+haystack	curmudgeon.h	/^    char * haystack; \/\/ used when getting captures because those$/;"	m	struct:regex
+host	curmudgeon.h	/^    char *          host;$/;"	m	struct:adapter
+ip	curmudgeon.h	/^    char * ip;$/;"	m	struct:event
+last_errno	curmudgeon.h	/^    unsigned int    last_errno;$/;"	m	struct:adapter
+last_error	curmudgeon.h	/^    char *          last_error;$/;"	m	struct:adapter
+length	curmudgeon.h	/^    int length;$/;"	m	struct:db_row
+max_events	curmudgeon.h	/^    int max_events;$/;"	m	struct:curmudgeon
+myconn	curmudgeon.h	/^        MYSQL * myconn;$/;"	m	union:adapter::__anon1
+myresult	curmudgeon.h	/^        MYSQL_RES * myresult;$/;"	m	union:adapter::__anon2
+name	curmudgeon.h	/^    char * name; \/\/ the even name, i.e. mydomain.com\/event\/arg1\/arg2$/;"	m	struct:event
+name	curmudgeon.h	/^    char * name;$/;"	m	struct:db_col
+name_entry_size	curmudgeon.h	/^    int name_entry_size; \/\/ largest name$/;"	m	struct:regex
+name_length	curmudgeon.h	/^    int name_length;$/;"	m	struct:db_col
+namec	curmudgeon.h	/^    int namec; \/\/ named capt count$/;"	m	struct:regex
+named	curmudgeon.h	/^    char *  (*named)(regex_t *,char *); $/;"	m	struct:regex
+names	curmudgeon.h	/^    unsigned char * names;$/;"	m	struct:regex
+options	curmudgeon.h	/^    int options; \/\/ options used$/;"	m	struct:regex
+ovector	curmudgeon.h	/^    int * ovector;$/;"	m	struct:regex
+pass	curmudgeon.h	/^    char *          pass;$/;"	m	struct:adapter
+pattern	curmudgeon.h	/^    char * pattern;$/;"	m	struct:regex
+port	curmudgeon.h	/^    unsigned int    port;$/;"	m	struct:adapter
+regex	curmudgeon.h	/^    regex_t * regex;$/;"	m	struct:registered_event
+regex	curmudgeon.h	/^struct regex {$/;"	s
+regex_t	curmudgeon.h	/^typedef struct regex regex_t;$/;"	t	typeref:struct:regex
+registered_event	curmudgeon.h	/^typedef struct registered_event {$/;"	s
+registered_event_t	curmudgeon.h	/^} registered_event_t;$/;"	t	typeref:struct:registered_event
+schema	curmudgeon.h	/^    int schema; \/\/ Your database schema version$/;"	m	struct:curmudgeon
+schema	curmudgeon.h	/^    int schema;$/;"	m	struct:adapter
+schema_version_file	curmudgeon.h	/^    char * schema_version_file;$/;"	m	struct:adapter
+schema_version_file	curmudgeon.h	/^    char * schema_version_file;$/;"	m	struct:curmudgeon
+study	curmudgeon.h	/^    pcre_extra * study;$/;"	m	struct:regex
+type	curmudgeon.h	/^    int             type;$/;"	m	struct:adapter
+used	curmudgeon.h	/^    short used; \/\/ just a tag to see if this has already been used$/;"	m	struct:regex
+user	curmudgeon.h	/^    char *          user;$/;"	m	struct:adapter
+value	curmudgeon.h	/^    char * value;$/;"	m	struct:db_col
+value_length	curmudgeon.h	/^    int value_length;$/;"	m	struct:db_col

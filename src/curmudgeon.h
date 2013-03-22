@@ -24,7 +24,8 @@ enum cur_return_codes {
     CUR_CANNOT_FREE,
     CUR_HANDLER_NOT_FOUND,
     CUR_DB_ERROR,
-    CUR_DB_DONE
+    CUR_DB_DONE,
+    CUR_SCHEMA_UPTODATE
 };
 
 typedef struct event event_t;
@@ -40,7 +41,8 @@ typedef struct curmudgeon {
     int max_events;
     int events_length;
     registered_event_t ** events;
-    adapter_t * conn;
+    int schema; // Your database schema version
+    char * schema_version_file;
 } curmudgeon_t;
 struct event {
     char * name; // the even name, i.e. mydomain.com/event/arg1/arg2
@@ -86,6 +88,7 @@ struct regex {
 };
 int              cur_init( curmudgeon_t ** cur, int num_events ); // called at startup
 int              cur_done( curmudgeon_t ** cur );               // called to clean up when done.
+int              cur_free_adapter(adapter_t ** adptr);
 int              cur_parse_request( const char * url, event_t ** e );
 int              cur_call_handler( curmudgeon_t * cur, event_t ** e );
 int              cur_register_event( curmudgeon_t ** cur, char * pattern, int opts, callback_t callback );
@@ -101,6 +104,10 @@ enum cur_adapters {
     CUR_MYSQL
 };
 
+/**
+ * The Adapter is the connection to the database,
+ * and also where we store results.
+ * */
 struct adapter {
     short           connected;
     int             type;
@@ -110,7 +117,10 @@ struct adapter {
     unsigned int    port;
     unsigned long   flags;
     char *          last_error;
+    char *          database_name;
     unsigned int    last_errno;
+    int schema;
+    char * schema_version_file;
     union {
         MYSQL * myconn;
     };
@@ -131,25 +141,38 @@ struct db_col {
     int value_length;
     int name_length;
 };
-
-int         db_mysql( curmudgeon_t ** cur, char * host, char * user, char * pass);
-int         db_connect( curmudgeon_t ** cur );
-int         db_disconnect( curmudgeon_t * cur);
-int         db_exec( curmudgeon_t ** cur, char * query );
-int         db_select_db( curmudgeon_t ** cur, char * db);
-int         db_query( curmudgeon_t ** cur, char * query);
-int         db_free_result( curmudgeon_t ** cur );
-int         db_next( curmudgeon_t * cur, db_row_t ** row );
-int         db_next_as_json( curmudgeon_t * cur, json_t ** obj,db_row_t **);
-int         db_result_as_json( curmudgeon_t ** cur, json_t ** obj);
-
-int         db_find_by(curmudgeon_t ** cur, json_t **, char * table, char * field, char * value, char * select);
-int         db_find_by_sql(curmudgeon_t ** cur, json_t **, char * query, ...);
+            // We need a pointer to the adapter to do the mallocs
+int         db_mysql( curmudgeon_t * cur,adapter_t ** adptr, char * host, char * user, char * pass);
+int         db_connect( adapter_t * adptr );
+int         db_disconnect( adapter_t * adptr);
+int         db_exec( adapter_t * adptr, char * query );
+int         db_select_db( adapter_t * adptr, char * db);
+int         db_query(adapter_t * adptr, char * query);
+int         db_free_result( adapter_t * adptr );
+int         db_next( adapter_t * adptr, db_row_t ** row );
+int         db_next_as_json( adapter_t * adptr, json_t ** obj,db_row_t **);
+int         db_result_as_json( adapter_t * adptr, json_t ** obj);
+int         db_find_by(adapter_t * adptr, json_t **, char * table, char * field, char * value, char * select);
+int         db_find_by_sql(adapter_t * adptr, json_t **, char * query, ...);
+/**
+ * Schema and migration functions. The basic idea is that there is a pickup
+ * file in the app/conf directory called schema.version. When we call one
+ * of these schema functions, we need to check that file against
+ * the current app->schema version. If it is <= we do nothing, otherwise
+ * we run the query.
+ *
+ * The pickup file path is defined in app->schema_version_file and
+ * can be set by the app to point somewhere else.
+ * */
+int        schema_database(adapter_t * adptr, char * database, char * charset,char * collate);
+int        schema_table(adapter_t * adptr, char * table, ...);
 
 // Private internal functions, not really intended
 // to be used by app developers, though they can if
 // they want, these functions don't really clean up
 // after themselves, they just do a job and return
+int              _get_num_from_file(char * filename);
+int              _set_num_in_file(char * filename,int num);
 char *           _get_pcre_error(int code);
 char *           _regex_nummed(regex_t * re,int i);
 char *           _regex_named(regex_t * re,char * n);

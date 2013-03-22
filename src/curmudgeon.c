@@ -21,7 +21,8 @@ int cur_init( curmudgeon_t ** dest, int num_events ) {
     }
     cur->max_events = num_events;
     cur->events_length = -1;
-    cur->conn = NULL;
+    cur->schema = 0;
+    cur->schema_version_file = "conf/schema.version";// this is overrideable
     // need to loadup schema data
     *dest = cur; // notice how we set *dest here, i.e. we overwrite the pointer that points to the value.
     return CUR_OK;
@@ -41,16 +42,18 @@ int cur_done( curmudgeon_t ** to_free ) {
     for (i = 0; i <= cur->events_length; i++) {
             free(cur->events[i]);
     }
+    return CUR_OK;
+}
+int cur_free_adapter(adapter_t ** adptr) {
+    adapter_t * a = *adptr;
     // If we are connected to the database, we
     // should close out that connection.
-    if ( cur->conn ) {
-        if (cur->conn->connected == 1) {
-            db_disconnect(cur);
+    if ( a ) {
+        if (a->connected == 1) {
+            db_disconnect(a);
         }
-        free(cur->conn);
     }
-    free(cur->events);
-    free(cur);
+    free(a);
     return CUR_OK;
 }
 // Holding/testing function, the real function will probably be 
@@ -71,13 +74,13 @@ int cur_parse_request( const char * url, event_t ** dest ) {
     e->argc = argc;
     char * token;
     char * cpy;
-    cpy = _strdup(url);
+    cpy = strdup(url);
     cpy++; // skip the first char
     token = strsep(&cpy,"/");
-    e->name = _strdup(token);
+    e->name = strdup(token);
     i = 0;
     while( ( token = strsep(&cpy,"/")) ) {
-        e->args[i] = _strdup(token);
+        e->args[i] = strdup(token);
         i++;
     }
     *dest = e;
@@ -247,7 +250,7 @@ int cur_regex(regex_t ** re_dest,char * pattern) {
             pcre_free(re->study);
         }
     }
-    re->pattern = _strdup(pattern);
+    re->pattern = strdup(pattern);
     re->options = options;
     re->named = _regex_named; // these are pointers to functions that can be
     // overridden by the user.
@@ -306,8 +309,7 @@ int cur_free_regex(regex_t ** re_dest) {
 // around and keep track of a lot of different values and
 // be freeing them yourself and we wouldn't be much of a
 // framework if we made the user do absolutely everything.
-int db_mysql( curmudgeon_t ** dest, char * host, char * user, char * pass) {
-    curmudgeon_t * cur = *dest;
+int db_mysql( curmudgeon_t * cur,adapter_t ** adptr, char * host, char * user, char * pass) {
     adapter_t * a = malloc(sizeof(adapter_t));
     a->type = CUR_MYSQL;
     a->user = user;
@@ -315,17 +317,17 @@ int db_mysql( curmudgeon_t ** dest, char * host, char * user, char * pass) {
     a->host = host;
     a->port = 3306;
     a->myconn = mysql_init(NULL);
+    a->schema = cur->schema;
+    a->schema_version_file = cur->schema_version_file;
     if (a->myconn == NULL) {
         SET_MYSQL_ERROR
     }
     a->connected = 0;
-    cur->conn = a;
+    *adptr = a;
     return CUR_OK;
 }
-int db_connect( curmudgeon_t ** dest ) {
-    curmudgeon_t * cur = *dest;
-    if (cur->conn->type == CUR_MYSQL) {
-        adapter_t * a = cur->conn;
+int db_connect( adapter_t * a ) {
+    if (a->type == CUR_MYSQL) {
         if (mysql_real_connect(a->myconn, a->host, a->user, a->pass, NULL, 0, NULL, 0) == NULL) {
             // this is a macro that prints out the error and returns CUR_DB_ERROR.
             SET_MYSQL_ERROR
@@ -336,16 +338,14 @@ int db_connect( curmudgeon_t ** dest ) {
     }
     return CUR_OK;
 }
-int db_disconnect( curmudgeon_t * cur) {
-    if (cur->conn->type == CUR_MYSQL) {
-        mysql_close(cur->conn->myconn);
-        cur->conn->connected = 0;
+int db_disconnect( adapter_t * a) {
+    if (a->type == CUR_MYSQL) {
+        mysql_close(a->myconn);
+        a->connected = 0;
     }
     return CUR_OK;
 }
-int db_exec( curmudgeon_t ** dest, char * query) {
-    curmudgeon_t * cur = *dest;
-    adapter_t * a = cur->conn;
+int db_exec( adapter_t * a, char * query) {
     assert(a->connected == 1); 
     if (a->type == CUR_MYSQL) {
         if ( mysql_query(a->myconn,query) != 0) {
@@ -354,9 +354,7 @@ int db_exec( curmudgeon_t ** dest, char * query) {
     }
     return CUR_OK;
 }
-int db_select_db( curmudgeon_t ** dest, char * db) {
-    curmudgeon_t * cur = *dest;
-    adapter_t * a = cur->conn;
+int db_select_db( adapter_t * a, char * db) {
     assert(a->connected == 1); 
     if (a->type == CUR_MYSQL) {
         if ( mysql_select_db(a->myconn,db) != 0) {
@@ -365,9 +363,7 @@ int db_select_db( curmudgeon_t ** dest, char * db) {
     }
     return CUR_OK;
 }
-int db_query( curmudgeon_t ** dest, char * query) {
-    curmudgeon_t * cur = *dest;
-    adapter_t * a = cur->conn;
+int db_query( adapter_t * a, char * query) {
     assert(a->connected == 1); 
     assert(a->myresult == NULL);
     if (a->type == CUR_MYSQL) {
@@ -381,9 +377,7 @@ int db_query( curmudgeon_t ** dest, char * query) {
     }
     return CUR_OK;
 }
-int db_free_result( curmudgeon_t ** dest ) {
-    curmudgeon_t * cur = *dest;
-    adapter_t * a = cur->conn;
+int db_free_result( adapter_t * a ) {
     assert(a->connected == 1); 
     assert(a->myresult != NULL);
     if (a->type == CUR_MYSQL) {
@@ -392,9 +386,16 @@ int db_free_result( curmudgeon_t ** dest ) {
     }
     return CUR_OK;
 }
-int db_next( curmudgeon_t * cur, db_row_t ** dest ) {
+void _free_db_row_cols(db_row_t * row) {
+    int i;
+    for (i = 0; i < row->length; i++) {
+        if (row->cols[i]) {
+            free(row->cols[i]);
+        }
+    }
+}
+int db_next( adapter_t * a, db_row_t ** dest ) {
     db_row_t * row = *dest;
-    adapter_t *     a = cur->conn;
     assert(a->connected == 1); 
     assert(a->myresult != NULL);
     MYSQL_ROW       mrow;
@@ -409,18 +410,22 @@ int db_next( curmudgeon_t * cur, db_row_t ** dest ) {
     }
     assert(row != NULL);
     if (row->cols) {
-        free(row->cols);
+        _free_db_row_cols(row);
     }
     row->cols = malloc(sizeof(db_col_t) * num_fields);
     assert(row->cols != NULL);
     row->length = num_fields;
+    // Null all of the entries!
+    for (i = 0; i < row->length; i++) {
+        row->cols[i] = NULL;
+    }
     i = 0;
     // this code will only execute the first time you call
     // next. Because after you have fetched all the rows
     // it will return null, which is why we store the row
     // names on row->field_names
     while ( (field = mysql_fetch_field(a->myresult)) ) {
-       row->field_names[i] = _strdup(field->name);
+       row->field_names[i] = strdup(field->name);
        i++;
     }
     if ( (mrow = mysql_fetch_row(a->myresult)) ) {
@@ -429,7 +434,7 @@ int db_next( curmudgeon_t * cur, db_row_t ** dest ) {
             assert(col != NULL);
             col->name = row->field_names[i]; 
             if (mrow[i]) {
-                col->value = _strdup(mrow[i]);
+                col->value = strdup(mrow[i]);
             } else {
                 col->value = "NULL";
             }
@@ -444,10 +449,7 @@ int db_next( curmudgeon_t * cur, db_row_t ** dest ) {
             free(row->field_names[i]);
         }
         free(row->field_names);
-        // now we need to free the col structs
-        for (i = 0; i < row->length; i++) {
-            free(row->cols[i]);
-        }
+        _free_db_row_cols(row); 
         free(row->cols);
         free(row);
         // we should probably free the result here automatically?
@@ -456,11 +458,11 @@ int db_next( curmudgeon_t * cur, db_row_t ** dest ) {
 }
 // This function just proxies db_next and packages the row up
 // as a json object like so: {f1:v1 ...}
-int db_next_as_json( curmudgeon_t * cur, json_t ** dest,db_row_t ** rdest) {
+int db_next_as_json( adapter_t * a, json_t ** dest,db_row_t ** rdest) {
     int i = 0;
     json_t * obj = json_object();
     assert(obj != NULL);
-    if (db_next(cur,rdest) == CUR_OK) {
+    if (db_next(a,rdest) == CUR_OK) {
         db_row_t * row = *rdest;
         for (i = 0; i < row->length; i++) {
             json_t * field = json_string(row->cols[i]->value);
@@ -476,29 +478,29 @@ int db_next_as_json( curmudgeon_t * cur, json_t ** dest,db_row_t ** rdest) {
 // Same as above, except this snags the complete result set.
 // so if you request 10,000 rows, you'll get a json array
 // of 10,000 objects!
-int db_result_as_json( curmudgeon_t ** cdest, json_t ** odest) {
+int db_result_as_json( adapter_t * a, json_t ** odest) {
         json_t * jrow = NULL;
         db_row_t * row2 = NULL;
         json_t * arr = json_array();
-        while ( db_next_as_json(*cdest,&jrow,&row2) == CUR_OK ) {
+        while ( db_next_as_json(a,&jrow,&row2) == CUR_OK ) {
             json_array_append(arr,jrow);
         }
-        db_free_result(cdest);
+        db_free_result(a);
         *odest = arr;
         return CUR_OK;
 }
-int db_find_by(curmudgeon_t ** cur, json_t ** all_rows,char * table, char * field, char * value, char * select) {
+int db_find_by(adapter_t * a, json_t ** all_rows,char * table, char * field, char * value, char * select) {
     if (!select) {
         select = "*";
     }
     char * fmt = "SELECT %s FROM `%s` WHERE `%s` = '%s'";
     char * query = malloc(strlen(fmt) + strlen(field) + strlen(value) + strlen(table) + strlen(select));
     sprintf(query,fmt,select,table,field,value);
-    db_query(cur,query);
-    db_result_as_json(cur,all_rows);
+    db_query(a,query);
+    db_result_as_json(a,all_rows);
     return CUR_OK;
 }
-int db_find_by_sql(curmudgeon_t ** cur,json_t ** all_rows, char * fmt, ...) {
+int db_find_by_sql(adapter_t * a,json_t ** all_rows, char * fmt, ...) {
     va_list sargs;
     va_start(sargs,fmt);
     char * tmp_str;
@@ -509,11 +511,54 @@ int db_find_by_sql(curmudgeon_t ** cur,json_t ** all_rows, char * fmt, ...) {
     char * query = malloc(sizeof(char) * char_count);
     va_start(sargs,fmt);
     vsprintf(query,fmt,sargs);
-    db_query(cur,query);
-    db_result_as_json(cur,all_rows);
+    db_query(a,query);
+    db_result_as_json(a,all_rows);
     return CUR_OK;
 }
+// Schema Functions
 
+int schema_database(adapter_t * a, char * database, char * charset,char * collate) {
+    int version = _get_num_from_file(a->schema_version_file);
+    if (version < a->schema || version == 0) {
+       if (a->type == CUR_MYSQL) {
+           if ( ! charset ) {
+               charset = "utf8";
+           }
+           if ( ! collate ) {
+               collate = "utf8_general_ci";
+           }
+           char * fmt = "CREATE DATABASE IF NOT EXISTS `%s` DEFAULT CHARACTER SET %s DEFAULT COLLATE %s";
+           int len = strlen(fmt) + strlen(charset) + strlen(collate) + 3;
+           char * query = malloc(sizeof(char) * len);
+           sprintf(query,fmt,database,charset,collate);
+           printf("query is: %s\n",query);
+           a->database_name = database;
+       }
+       return CUR_OK;
+    } else {
+        return CUR_SCHEMA_UPTODATE;
+    }
+}
+/*
+ * the ... should be: row_id_name, row_id_options*/
+int schema_table(adapter_t * adptr, char * table, ...) {
+    va_list sargs;
+    va_start(sargs,table);
+    char * tmp_str;
+    char * row_id_name = "_rowid_";
+    char * row_id_options = "BIGINT NOT NULL AUTO_INCREMENT";
+    char * engine = "MyISAM";
+    int i = 0;
+    while( (tmp_str = va_arg(sargs,char *)) ) {
+        switch(i) {
+            case 0:
+                row_id_name = strdup(tmp_str);
+            default:
+                break;
+        } 
+        i++;
+    }
+}
 
 // Private cur functions
 //
@@ -745,4 +790,37 @@ int _compare(const char * s1, const char * s2) {
         }
     }
     return 0;
+}
+int _get_num_from_file(char * filename) {
+#ifdef DEBUG
+    printf("Getting file: %s\n",filename);
+#endif
+    FILE * fp = fopen(filename,"r");
+    if ( ! fp ) {
+     printf("Failed to open %s in _get_num_from_file\n",filename); 
+     assert(1 == 0);
+    }
+    char c;
+    char buffer[11]; // Max int is: 2147483647 that's 11 chars + nul
+    int cap = 11; // i.e. we allow 0-10 (i.e. 11) chars
+    int i = 0;
+    while ( ( (c = fgetc(fp)) != EOF ) && i < cap ) {
+        buffer[i] = c;
+        i++;
+    }
+    buffer[++i] = '\0'; // then we append a \0
+    fclose(fp);
+    return atoi(buffer);
+}
+int _set_num_in_file(char * filename,int num) {
+    FILE * fp = fopen(filename,"w");
+    if ( ! fp ) {
+     printf("Failed to open %s in _set_num_in_file \n",filename); 
+     assert(1 == 0);
+    }
+    char buffer[11];
+    sprintf(buffer,"%d",num);
+    fwrite(buffer,strlen(buffer), sizeof(char),fp);
+    fclose(fp);
+    return CUR_OK;
 }
