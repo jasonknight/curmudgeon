@@ -9,9 +9,10 @@
 [ \t]+                          { haml_set_whitespace(yytext); }
 [\r\n\f]+                       { /*printf("NLS: %d\n",strlen(yytext)); */}
 [%\.#][a-zA-Z\-_.#]+            { haml_create_tag_node(strdup(yytext)); }
-\{.+\}                          { printf("Options: %s\n",yytext); }
+\{.+\}                          { haml_set_options(strdup(yytext)); }
 =.+$                            { haml_parse_directive(last_created_node,strdup(yytext)); }
 [^ \r\n\f\t\{#%\.]+.+$          { haml_create_text_node(strdup(yytext)); }
+\}+          { haml_create_text_node(strdup(yytext)); }
 .                               { printf("unknown char %s\n",yytext);}
 %%
 
@@ -30,20 +31,34 @@ int main(void) {
     last_created_node = root_node;
 
     haml_node_t * root_node = haml_parse_file("template.haml"); 
-    print_tree(root_node,0);
+    //print_tree(root_node,0);
+    printf("%s\n",haml_node_as_xml(root_node,1));
     
+}
+int haml_set_options(char * opts) {
+    char * cpy = malloc(sizeof(char) * strlen(opts));
+    int i = 1;
+    int len = strlen(opts) -1;
+    while (i < len) {
+        cpy[i-1] = opts[i]; 
+        i++;
+    }
+    cpy[i] = '\0';
+    last_created_node->attrs = realloc(last_created_node->attrs, strlen(last_created_node->attrs) + strlen(opts));
+    strcat(last_created_node->attrs,cpy);
+    return 0;
 }
 int haml_parse_directive(haml_node_t * root, char * directive) {
     char * cpy = directive;
     ++cpy;
     char * token = strsep(&cpy," ");
     if (strcmp(token,"include") == 0) {
-    printf("cpy is: %s\n",cpy);
         yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE )); 
         char * token = strsep(&cpy," ");
         haml_parse_file(token);
         yypop_buffer_state();
     }
+    return 0;
 }
 haml_node_t * haml_parse_file(char * name) {
         
@@ -85,7 +100,7 @@ haml_node_t * haml_init_node(char *tag_name, int ws, char * id, char * classes) 
 
 haml_node_t * haml_append_new_node(haml_node_t *parent, char *tag_name, char * id,char *classes) {
 
-    haml_node_t * new_child  = haml_init_node(tag_name, current_whitespace_length, id,classes);
+    haml_node_t * new_child  = haml_init_node(++tag_name, current_whitespace_length, id,classes);
     if (parent->child_count == parent->max_children - 1) {
         parent->max_children = parent->max_children + ceil((parent->max_children * 0.33)); // grow by 33%
         parent->children = realloc(parent->children, parent->max_children * sizeof(char *));
@@ -260,6 +275,62 @@ haml_node_t * haml_find_parent(haml_node_t * current_node) {
     } else {
         return current_node;
     }
+}
+char * haml_node_as_xml(haml_node_t * node,int depth) {
+    int i = 0;
+    char * result = malloc(sizeof(char) * 1 );
+    char * tmp;
+    char * spaces = " ";
+    
+
+    result[0] = '\0';
+    for (i = 0; i < node->child_count; i++) {
+       char * c_res = haml_node_as_xml(node->children[i],++depth); 
+       tmp = haml_append_string_with_newline(spaces,result,c_res);
+       free(result);
+       free(c_res);
+       result = tmp;
+    }
+    if (node->type == 1) {
+       tmp = haml_append_string(spaces,result,node->text_contents); 
+       free(result);
+       result = tmp;
+    } else if (strcmp(node->tag_name,"_r00t_") != 0) {
+        if (
+            strcmp("meta",node->tag_name)   == 0 ||
+            strcmp("input",node->tag_name)  == 0 ||
+            strcmp("br",node->tag_name)     == 0 ||
+            strcmp("hr",node->tag_name)     == 0 ||
+            strcmp("img",node->tag_name)    == 0 ||
+            strcmp("link",node->tag_name)   == 0
+        ) {
+            char * fmt = "<%s %s />\n";
+            int len = strlen(node->tag_name) + strlen(node->attrs) + strlen(result) + strlen(fmt) + strlen(spaces);
+            char * nres = malloc(sizeof(char) * len);
+            sprintf(nres,fmt,node->tag_name,node->attrs);
+            return nres;
+
+        } else {
+            char * fmt = "<%s %s>%s</%s> ";
+            int len = strlen(node->tag_name) + strlen(node->attrs) + strlen(result) + strlen(fmt) + strlen(spaces);
+            char * nres = malloc(sizeof(char) * len);
+            sprintf(nres,fmt,node->tag_name,node->attrs,result,node->tag_name);
+            return nres;
+        }
+    }
+    return result;
+}
+char * haml_append_string(char * spaces,char * s1, char * s2) {
+        char * fmt = "%s%s%s";
+        char * new_string = malloc(sizeof(char) * ( strlen(s1) + strlen(s2) + strlen(fmt) ));
+        sprintf(new_string,fmt,spaces,s1,s2);
+        return new_string;
+}
+char * haml_append_string_with_newline(char * spaces,char * s1, char * s2) {
+        char * fmt = "%s%s %s%s";
+        char * new_string = malloc(sizeof(char) * ( strlen(s1) + strlen(s2) + strlen(fmt) ));
+        sprintf(new_string,fmt,spaces,s1,spaces,s2);
+        return new_string;
 }
 
 int print_tree(haml_node_t *current_node, int recursion_depth) {
