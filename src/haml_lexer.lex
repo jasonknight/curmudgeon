@@ -29,3 +29,6 @@ int main(void) {
     yylex();
     fclose(myfile);
 }
+
+haml_node_t * parse_haml_template(char * name) {}
+char * haml_node_to_html(haml_node_t * root) {}
