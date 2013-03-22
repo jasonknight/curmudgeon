@@ -22,6 +22,7 @@ int cur_init( curmudgeon_t ** dest, int num_events ) {
     cur->max_events = num_events;
     cur->events_length = -1;
     cur->conn = NULL;
+    // need to loadup schema data
     *dest = cur; // notice how we set *dest here, i.e. we overwrite the pointer that points to the value.
     return CUR_OK;
 }
