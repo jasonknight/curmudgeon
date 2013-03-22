@@ -6,12 +6,12 @@
 %}
 %pointer
 %%  
-[ \t]+                          { set_whitespace(yytext); }    
-[\r\n\f]+                       { printf("NLS: %d\n",strlen(yytext)); }    
-[%\.#][a-zA-Z\-_].+              { create_tag_node(yytext); }    
-\{.+\}                          { printf("Options: %s\n",yytext); }    
-=.+$                            { printf("Directive: %s\n",yytext); }  
-[^ \r\n\f\t\{#%\.]+.+$          { create_text_node(yytext); }  
+[ \t]+                          { set_whitespace(yytext); }
+[\r\n\f]+                       { /*printf("NLS: %d\n",strlen(yytext)); */}
+[%\.#][a-zA-Z\-_]+              { create_tag_node(yytext); }
+\{.+\}                          { printf("Options: %s\n",yytext); }
+=.+$                            { printf("Directive: %s\n",yytext); }
+[^ \r\n\f\t\{#%\.]+.+$          { create_text_node(yytext); }
 .                               { printf("unknown char %s\n",yytext);}
 %%
 
@@ -38,6 +38,7 @@ int main(void) {
     fclose(myfile);
     
     print_tree(root_node,0);
+    
 }
 
 haml_node_t * init_haml_node(char *tag_name, int ws, char *attrs) {
@@ -52,7 +53,7 @@ haml_node_t * init_haml_node(char *tag_name, int ws, char *attrs) {
     return node;
 }
 
-int append_new_haml_node(haml_node_t *parent, char *tag_name, char *attrs) {
+haml_node_t *append_new_haml_node(haml_node_t *parent, char *tag_name, char *attrs) {
     haml_node_t * new_child = init_haml_node(tag_name, current_whitespace_length, attrs);
     if (parent->child_count == parent->max_children - 1) {
         parent->max_children = parent->max_children + ceil((parent->max_children * 0.33)); // grow by 33%
@@ -67,29 +68,86 @@ int create_tag_node(char * haml_string) {
     char * first_char = malloc(sizeof(char));
 
     strncpy(first_char, haml_string, 1);
+    
     if (strcmp(first_char, "%") == 0) {
         haml_node_t * parent = find_parent(last_created_node);
         last_created_node = append_new_haml_node(parent, haml_string, "");
 
-    } else if (strcmp(first_char, "#") == 0) {
-        int i, id_length;
-        char *id_string, *full_id_attr;
-        char attr_prefix[4] = "id=";
-        
-        id_length = strlen(haml_string);
-        
-        id_string = malloc(sizeof(char) * (id_length - 1));  // excluding hash
-        full_id_attr = malloc(sizeof(char) * (strlen(id_string) + strlen(attr_prefix)));
-        
-        for (i=0; i<strlen(haml_string); i++) {
-            id_string[i] = haml_string[i+1];  // copy everything except hash
-        }
-        
-        full_id_attr = strcat(attr_prefix, id_string);
+    } else if ((strcmp(first_char, "#") == 0) || strcmp(first_char, ".") == 0) {
+        char *attr_string = attribuify_special_div_notation(haml_string);
         haml_node_t * parent = find_parent(last_created_node);
-        last_created_node = append_new_haml_node(parent, "%div", full_id_attr);
+        last_created_node = append_new_haml_node(parent, "%div", attr_string);
+
     }
     return 0;
+}
+
+char *attribuify_special_div_notation(char *haml_string) {
+    char *result, *id, *cls;
+    char **classes;
+    char id_prefix[] = "id=";
+    char class_prefix[] = "class=";
+    int i, haml_string_length, mode_id, mode_class, id_length, cls_length, class_count;
+    
+    mode_id = 0;
+    mode_class = 0;
+    class_count = 0;
+    id_length = 0;
+    cls_length = 0;
+    haml_string_length = strlen(haml_string);
+    
+    id = malloc(sizeof(char) * 100);
+    classes = malloc(sizeof(char *) * 100);
+    result = malloc(sizeof(char *) * 100);
+    
+    // state machine for parsing special divs
+    for( i=0; i<haml_string_length; i++) {
+        if (haml_string[i] == '#') {
+            mode_id = 1;
+            id_length = 0;
+            mode_class = 0;
+            continue;
+            
+        } else if (haml_string[i] == '.') {
+            mode_id = 0;
+            mode_class = 1;
+            cls = malloc(sizeof(char) * 100);
+            classes[class_count] = cls;
+            class_count++;
+            cls_length = 0;
+            continue;
+        }
+        
+        if (mode_id) {
+            id[id_length++] = haml_string[i];
+        } else if (mode_class) {
+            cls[cls_length++] = haml_string[i];
+        }
+    }
+    
+    // render classes and ids into a string
+    
+    if (strlen(id) > 0) {
+        strcat(result, id_prefix);
+        strcat(result, "\"");
+        strcat(result, id);
+        strcat(result, "\" ");
+    }
+    
+    if (class_count > 0) {
+        strcat(result, class_prefix);
+        strcat(result, "\"");
+        for (i=0; i<class_count; i++) {
+            strcat(result, classes[i]);
+            strcat(result, " ");
+        }
+        strcat(result, "\"");
+    }
+    
+    free(id);
+    //free(classes);
+    return result;
+    free(result);
 }
 
 int create_text_node(char * text) {
