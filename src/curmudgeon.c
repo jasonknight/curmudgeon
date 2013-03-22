@@ -175,7 +175,7 @@ int cur_regex(regex_t ** re_dest,char * pattern) {
         j = 0;
         while (i < pattern_length) {
             parse_top:
-            if (pattern[i] == '\\') {
+            if (pattern[i] == '-') {
              buffer[j] = pattern[++i]; //i.e. go to next char and append
              j++; // next position in buffer
              i++; // next character

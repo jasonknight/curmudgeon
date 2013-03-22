@@ -20,7 +20,9 @@ int main(void) {
 
 
         regex_t * re = NULL;
-        cur_regex(&re,"/^\\/hello_(?P<wor>world)(?P<another>\\/something)\\/(?P<else>.*)/i");
+        // - is the escape character because \\ is to messy and ugly. and -- in
+        // char classes does not make them less readable
+        cur_regex(&re,"/^-/hello_(?P<wor>world)(?P<another>-/something)-/(?P<else>.*)/i");
         int rc = cur_match(&re,"/hello_world/something/aboutelse",0);
         if ( rc == CUR_OK ) {
             int i;
