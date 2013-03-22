@@ -7,12 +7,12 @@
 %pointer
 %%  
 [ \t]+                          { set_whitespace(yytext); }    
-[\r\n\f]+                       { /*printf("NLS: %d\n",strlen(yytext));*/ }    
+[\r\n\f]+                       { printf("NLS: %d\n",strlen(yytext)); }    
 [%\.#][a-zA-Z\-_]+              { create_tag_node(yytext); }    
-\{.+\}                          { /*printf("Options: %s\n",yytext);*/ }    
-=.+$                            { /*printf("Directive: %s\n",yytext);*/ }  
-[^ \r\n\f\t\{#%\.]+.+$          { /*printf("Text: %s\n",yytext);*/ }  
-.                               { /*printf("unknown char %s\n",yytext);*/}
+\{.+\}                          { printf("Options: %s\n",yytext); }    
+=.+$                            { printf("Directive: %s\n",yytext); }  
+[^ \r\n\f\t\{#%\.]+.+$          { create_text_node(yytext); /*printf("Text: %s\n",yytext); */ }  
+.                               { printf("unknown char %s\n",yytext);}
 %%
 
 void yyerror(const char *str) {
@@ -25,11 +25,11 @@ int yywrap() {
 
 int main(void) {
     
-    printf("Creating r00t node\n");
+    //printf("Creating r00t node\n");
     current_whitespace_length = 0;
     root_node = init_haml_node("_r00t_", -2);
     last_created_node = root_node;
-    printf("Created r00t node at %X\n", root_node);
+    //printf("Created r00t node at %X\n", root_node);
     
     FILE *myfile = fopen("../examples/template.haml", "r");
     if (!myfile) {
@@ -42,7 +42,7 @@ int main(void) {
     
 
     
-    print_tree(root_node);
+    print_tree(root_node,0);
 }
 
 haml_node_t * init_haml_node(char * tag_name, int ws) {
@@ -68,8 +68,7 @@ int append_new_haml_node(haml_node_t * parent, char * tag_name) {
     }
     parent->children[parent->child_count++] = new_child;
     new_child->parent = parent;
-    last_created_node = new_child;
-    return 0;
+    return new_child;
 }
 
 int create_tag_node(char * haml_string) {
@@ -80,14 +79,25 @@ int create_tag_node(char * haml_string) {
     //printf("TAG: %s\n", haml_string);
 
     if (strcmp(first_char, "%") == 0) {
-        printf("\n\nattempting to find parent for %s, ws=%i\n", haml_string, current_whitespace_length);
+        //printf("\n\nattempting to find parent for %s, ws=%i\n", haml_string, current_whitespace_length);
         haml_node_t * parent = find_parent(last_created_node);
-        printf("parent of %s is %s\n", haml_string, parent->tag_name);
+        //printf("parent of %s is %s\n", haml_string, parent->tag_name);
         //printf("Creating node %s for parent %X, children address %X\n", haml_string, parent, parent->children);
-        append_new_haml_node(parent, haml_string);
+        
+        last_created_node = append_new_haml_node(parent, haml_string);
         //printf("tag %s is not yet supported\n", haml_string);
         
     }
+    return 0;
+}
+
+int create_text_node(char * text) {
+    haml_node_t *node;
+    node = append_new_haml_node(last_created_node, "");
+    node->text_contents = strdup(text);
+    node->type = 1;
+    node->ws = last_created_node->ws + 2;
+    //last_created_node = node;
     return 0;
 }
 
@@ -99,35 +109,35 @@ int set_whitespace(char * whitespace_string) {
 }
 
 haml_node_t * find_parent(haml_node_t * current_node) {
-    printf("Finding parent for %s address %X, ws=%i\n", current_node->tag_name, current_node, current_whitespace_length);
+    //printf("Finding parent for %s address %X, ws=%i\n", current_node->tag_name, current_node, current_whitespace_length);
     if (current_node->parent == 0) {
-        printf("No parent for _r00t_ node. Returning r00t node instead.\n");
+        //printf("No parent for _r00t_ node. Returning r00t node instead.\n");
         return current_node;
     }
     //haml_node_t * parent = current_node->parent;
     if (current_node->ws > current_whitespace_length - 2) {
-        printf("    recursion\n");
+        //printf("    recursion\n");
         find_parent(current_node->parent);
     } else {
         return current_node;
     }
 }
 
-int print_tree(haml_node_t *current_node) {
+int print_tree(haml_node_t *current_node, int recursion_depth) {
     int i;
     haml_node_t *n, *c;
     n = current_node;
     char * spaces = malloc(sizeof(char) * current_node->ws);
     
-    for (i=0; i<current_node->ws; i++) {
+    for (i=0; i<2*recursion_depth; i++) {
         spaces[i] = 0x20;
     }
-    
+    recursion_depth++;
     //printf("%s", spaces);
-    printf("%s<Node tag_name: '%s', type: %i, ws: %i, child_count: %i, max_children: %i, text_contents: '%s' children: %X, parent: %X>\n", spaces, n->tag_name, n->type, n->ws, n->child_count, n->max_children, n->text_contents, n->children, n->parent);
+    printf("%s<Node#%X tag_name: '%s', type: %i, ws: %i, child_count: %i, max_children: %i, text_contents: '%s' children: %X, parent: %X>\n", spaces, n, n->tag_name, n->type, n->ws, n->child_count, n->max_children, n->text_contents, n->children, n->parent);
     for (i=0; i<(n->child_count); i++) {
         c = n->children[i];
-        print_tree(c);
+        print_tree(c, recursion_depth);
     }
 }
 
