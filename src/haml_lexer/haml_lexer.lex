@@ -6,12 +6,12 @@
 %}
 %pointer
 %%  
-[ \t]+                          { set_whitespace(yytext); }
+[ \t]+                          { haml_set_whitespace(yytext); }
 [\r\n\f]+                       { /*printf("NLS: %d\n",strlen(yytext)); */}
-[%\.#][a-zA-Z\-_.#]+            { create_tag_node(strdup(yytext)); }
+[%\.#][a-zA-Z\-_.#]+            { haml_create_tag_node(strdup(yytext)); }
 \{.+\}                          { printf("Options: %s\n",yytext); }
 =.+$                            { haml_parse_directive(last_created_node,strdup(yytext)); }
-[^ \r\n\f\t\{#%\.]+.+$          { create_text_node(strdup(yytext)); }
+[^ \r\n\f\t\{#%\.]+.+$          { haml_create_text_node(strdup(yytext)); }
 .                               { printf("unknown char %s\n",yytext);}
 %%
 
@@ -26,10 +26,10 @@ int yywrap() {
 int main(void) {
 
     current_whitespace_length = 0;
-    root_node = init_haml_node("_r00t_", -2, "","");
+    root_node = haml_init_node("_r00t_", -2, "","");
     last_created_node = root_node;
 
-    haml_node_t * root_node = parse_file("template.haml"); 
+    haml_node_t * root_node = haml_parse_file("template.haml"); 
     print_tree(root_node,0);
     
 }
@@ -41,11 +41,11 @@ int haml_parse_directive(haml_node_t * root, char * directive) {
     printf("cpy is: %s\n",cpy);
         yypush_buffer_state(yy_create_buffer( yyin, YY_BUF_SIZE )); 
         char * token = strsep(&cpy," ");
-        parse_file(token);
+        haml_parse_file(token);
         yypop_buffer_state();
     }
 }
-haml_node_t * parse_file(char * name) {
+haml_node_t * haml_parse_file(char * name) {
         
     FILE *myfile = fopen(name, "r");
     if (!myfile) {
@@ -58,7 +58,7 @@ haml_node_t * parse_file(char * name) {
     return root_node;
 }
 
-haml_node_t * init_haml_node(char *tag_name, int ws, char * id, char * classes) {
+haml_node_t * haml_init_node(char *tag_name, int ws, char * id, char * classes) {
     //printf("Created Node: %s with attrs[%s %s]\n",tag_name,id,classes);
     char * fmt = malloc(sizeof(char) * 100);
     if ( strlen(id) > 0 && strlen(classes) > 0) {
@@ -83,9 +83,9 @@ haml_node_t * init_haml_node(char *tag_name, int ws, char * id, char * classes) 
     return node;
 }
 
-haml_node_t *append_new_haml_node(haml_node_t *parent, char *tag_name, char * id,char *classes) {
+haml_node_t * haml_append_new_node(haml_node_t *parent, char *tag_name, char * id,char *classes) {
 
-    haml_node_t * new_child = init_haml_node(tag_name, current_whitespace_length, id,classes);
+    haml_node_t * new_child  = haml_init_node(tag_name, current_whitespace_length, id,classes);
     if (parent->child_count == parent->max_children - 1) {
         parent->max_children = parent->max_children + ceil((parent->max_children * 0.33)); // grow by 33%
         parent->children = realloc(parent->children, parent->max_children * sizeof(char *));
@@ -95,31 +95,19 @@ haml_node_t *append_new_haml_node(haml_node_t *parent, char *tag_name, char * id
     return new_child;
 }
 
-int create_tag_node(char * haml_string) {
+int haml_create_tag_node(char * haml_string) {
     if (haml_string[0] == '%') {
-        haml_node_t * parent = find_parent(last_created_node);
-        last_created_node = append_new_haml_node(parent, haml_string, "","");
+        haml_node_t * parent    = haml_find_parent(last_created_node);
+        last_created_node       = haml_append_new_node(parent, haml_string, "","");
     } else if (haml_string[0] == '#' || haml_string[0] == '.') {
-        //printf("# access for %s\n",haml_string);
-        char * id_is = extract_id_from_string(haml_string);
-        char * classes_are = extract_classes_from_string(haml_string);
-        haml_node_t * parent = find_parent(last_created_node);
-        last_created_node = append_new_haml_node(parent, "%div", id_is,classes_are);
+        char * id_is            = haml_extract_id_from_string(haml_string);
+        char * classes_are      = haml_extract_classes_from_string(haml_string);
+        haml_node_t * parent    = haml_find_parent(last_created_node);
+        last_created_node       = haml_append_new_node(parent, "%div", id_is,classes_are);
     }    // char * first_char = malloc(sizeof(char));
-   // strncpy(first_char, haml_string, 1);
-   // 
-   // if (strcmp(first_char, "%") == 0) {
-   //     haml_node_t * parent = find_parent(last_created_node);
-   //     last_created_node = append_new_haml_node(parent, haml_string, "");
-   // } else if ((strcmp(first_char, "#") == 0) || strcmp(first_char, ".") == 0) {
-   //     char *attr_string = attribuify_special_div_notation(haml_string);
-   //     haml_node_t * parent = find_parent(last_created_node);
-   //     last_created_node = append_new_haml_node(parent, "%div", attr_string);
-   //     free(attr_string);
-   // }
     return 0;
 }
-char * extract_id_from_string(char * haml_string) {
+char * haml_extract_id_from_string(char * haml_string) {
     //printf("### Extracting id from string %s\n",haml_string);
     char * src = strdup(haml_string); // we will free this later
     char * tmp = src; // working copy
@@ -144,7 +132,7 @@ char * extract_id_from_string(char * haml_string) {
     free(src);
     return result;
 }
-char * extract_classes_from_string(char * haml_string) {
+char * haml_extract_classes_from_string(char * haml_string) {
     //printf("... %s\n",haml_string);
     char * buffer = malloc(sizeof(char) * strlen(haml_string));
     int i,j;
@@ -178,7 +166,7 @@ char * extract_classes_from_string(char * haml_string) {
     //printf("buffer is %s\n", buffer);
     return buffer;
 }
-char *attribuify_special_div_notation(char *haml_string) {
+char * haml_attribuify_special_div_notation(char *haml_string) {
     char *result, *id, *cls;
     char **classes;
     char id_prefix[] = "id=";
@@ -249,26 +237,26 @@ char *attribuify_special_div_notation(char *haml_string) {
     return result;
 }
 
-int create_text_node(char * text) {
+int haml_create_text_node(char * text) {
     haml_node_t *node;
-    node = append_new_haml_node(last_created_node, "", "","");
+    node = haml_append_new_node(last_created_node, "", "","");
     node->text_contents = strdup(text);
     node->type = 1;
     node->ws = last_created_node->ws + 2;
     return 0;
 }
 
-int set_whitespace(char * whitespace_string) {
+int haml_set_whitespace(char * whitespace_string) {
     current_whitespace_length = strlen(yytext);
     return 0;
 }
 
-haml_node_t * find_parent(haml_node_t * current_node) {
+haml_node_t * haml_find_parent(haml_node_t * current_node) {
     if (current_node->parent == 0) {
         return current_node;
     }
     if (current_node->ws > current_whitespace_length - 2) {
-        find_parent(current_node->parent);
+        return haml_find_parent(current_node->parent);
     } else {
         return current_node;
     }
