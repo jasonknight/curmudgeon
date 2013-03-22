@@ -8,7 +8,7 @@
 %%  
 [ \t]+                          { set_whitespace(yytext); }
 [\r\n\f]+                       { /*printf("NLS: %d\n",strlen(yytext)); */}
-[%\.#][a-zA-Z\-_]+              { create_tag_node(yytext); }
+[%\.#][a-zA-Z\-_.#]+              { create_tag_node(yytext); }
 \{.+\}                          { printf("Options: %s\n",yytext); }
 =.+$                            { printf("Directive: %s\n",yytext); }
 [^ \r\n\f\t\{#%\.]+.+$          { create_text_node(yytext); }
@@ -77,6 +77,7 @@ int create_tag_node(char * haml_string) {
         char *attr_string = attribuify_special_div_notation(haml_string);
         haml_node_t * parent = find_parent(last_created_node);
         last_created_node = append_new_haml_node(parent, "%div", attr_string);
+        free(attr_string);
 
     }
     return 0;
@@ -125,6 +126,9 @@ char *attribuify_special_div_notation(char *haml_string) {
         }
     }
     
+    id[id_length++] = 0x00;
+    cls[cls_length++] = 0x00;
+    
     // render classes and ids into a string
     
     if (strlen(id) > 0) {
@@ -139,15 +143,15 @@ char *attribuify_special_div_notation(char *haml_string) {
         strcat(result, "\"");
         for (i=0; i<class_count; i++) {
             strcat(result, classes[i]);
+            free(classes[i]);
             strcat(result, " ");
         }
         strcat(result, "\"");
     }
     
     free(id);
-    //free(classes);
+    free(classes);
     return result;
-    free(result);
 }
 
 int create_text_node(char * text) {
