@@ -553,6 +553,11 @@ int schema_table(adapter_t * adptr, char * table, ...) {
         switch(i) {
             case 0:
                 row_id_name = strdup(tmp_str);
+                break;
+            case 1:
+                row_id_options = strdup(tmp_str);
+                break;
+
             default:
                 break;
         } 
