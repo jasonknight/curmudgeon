@@ -9,7 +9,7 @@
 [%\.#][a-zA-Z\-_]+              { printf("TAG: %s\n",yytext); }    
 \{.+\}                          { printf("Options: %s\n",yytext); }    
 =.+$                            { printf("Directive: %s\n",yytext); }  
-[^ \r\n\f\t\{#%\.]+.+$                { printf("Text: %s\n",yytext); }  
+[^ \r\n\f\t\{#%\.]+.+$          { printf("Text: %s\n",yytext); }  
 .                               { printf("unknown char %s\n",yytext);}
 %%
 void yyerror(const char *str) {
