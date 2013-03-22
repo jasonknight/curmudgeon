@@ -16,16 +16,18 @@ struct haml_node {
     haml_node_t * parent;
 };
 
-int append_new_haml_node(haml_node_t * dest,char * tag_name);
+int append_new_haml_node(haml_node_t *, char *, char *);
 
-haml_node_t * init_haml_node(char * tag_name, int ws);
+haml_node_t * init_haml_node(char *, int, char *);
 
-haml_node_t * find_parent(haml_node_t * current_node);
+haml_node_t * find_parent(haml_node_t *);
 
-int create_tag_node(char * haml_string);
+int create_tag_node(char *);
 
+// File-global variables
 static haml_node_t * root_node;
 static haml_node_t * last_created_node;
+static haml_node_t * last_created_node_indented;
 static int current_whitespace_length;
 
 #endif

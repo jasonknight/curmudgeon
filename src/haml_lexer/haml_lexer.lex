@@ -8,7 +8,7 @@
 %%  
 [ \t]+                          { set_whitespace(yytext); }    
 [\r\n\f]+                       { printf("NLS: %d\n",strlen(yytext)); }    
-[%\.#][a-zA-Z\-_]+              { create_tag_node(yytext); }    
+[%\.#][a-zA-Z\-_].+              { create_tag_node(yytext); }    
 \{.+\}                          { printf("Options: %s\n",yytext); }    
 =.+$                            { printf("Directive: %s\n",yytext); }  
 [^ \r\n\f\t\{#%\.]+.+$          { create_text_node(yytext); /*printf("Text: %s\n",yytext); */ }  
@@ -27,7 +27,7 @@ int main(void) {
     
     //printf("Creating r00t node\n");
     current_whitespace_length = 0;
-    root_node = init_haml_node("_r00t_", -2);
+    root_node = init_haml_node("_r00t_", -2, "");
     last_created_node = root_node;
     //printf("Created r00t node at %X\n", root_node);
     
@@ -45,7 +45,7 @@ int main(void) {
     print_tree(root_node,0);
 }
 
-haml_node_t * init_haml_node(char * tag_name, int ws) {
+haml_node_t * init_haml_node(char *tag_name, int ws, char *attrs) {
     //printf("  = called init_haml_node(%s)\n", tag_name);
     haml_node_t * node = malloc(sizeof(haml_node_t));
     node->children = malloc(sizeof(haml_node_t) * 5);
@@ -54,13 +54,14 @@ haml_node_t * init_haml_node(char * tag_name, int ws) {
     node->max_children = 5;
     node->child_count = 0;
     node->ws = ws;
+    node->attrs = strdup(attrs);
     return node;
 }
 
-int append_new_haml_node(haml_node_t * parent, char * tag_name) {
+int append_new_haml_node(haml_node_t *parent, char *tag_name, char *attrs) {
     //printf("  = called append_new_haml_node(%X, %s)\n", parent, tag_name);
     //printf("    initializing new child node %s\n", tag_name);
-    haml_node_t * new_child = init_haml_node(tag_name, current_whitespace_length);
+    haml_node_t * new_child = init_haml_node(tag_name, current_whitespace_length, attrs);
     //printf("    initialized new child node %s\n", tag_name); 
     if (parent->child_count == parent->max_children - 1) {
         parent->max_children = parent->max_children + ceil((parent->max_children * 0.33)); // grow by 33%
@@ -84,16 +85,32 @@ int create_tag_node(char * haml_string) {
         //printf("parent of %s is %s\n", haml_string, parent->tag_name);
         //printf("Creating node %s for parent %X, children address %X\n", haml_string, parent, parent->children);
         
-        last_created_node = append_new_haml_node(parent, haml_string);
+        last_created_node = append_new_haml_node(parent, haml_string, "");
         //printf("tag %s is not yet supported\n", haml_string);
+    } else if (strcmp(first_char, "#") == 0) {
+        int i, id_length;
+        char *id_string, *full_id_attr;
+        char attr_prefix[4] = "id=";
         
+        id_length = strlen(haml_string);
+        
+        id_string = malloc(sizeof(char) * (id_length - 1));  // excluding hash
+        full_id_attr = malloc(sizeof(char) * (strlen(id_string) + strlen(attr_prefix)));
+        
+        for (i=0; i<strlen(haml_string); i++) {
+            id_string[i] = haml_string[i+1];  // copy everything except hash
+        }
+        
+        full_id_attr = strcat(attr_prefix, id_string);
+        haml_node_t * parent = find_parent(last_created_node);
+        last_created_node = append_new_haml_node(parent, "%div", full_id_attr);
     }
     return 0;
 }
 
 int create_text_node(char * text) {
     haml_node_t *node;
-    node = append_new_haml_node(last_created_node, "");
+    node = append_new_haml_node(last_created_node, "", "");
     node->text_contents = strdup(text);
     node->type = 1;
     node->ws = last_created_node->ws + 2;
@@ -134,7 +151,7 @@ int print_tree(haml_node_t *current_node, int recursion_depth) {
     }
     recursion_depth++;
     //printf("%s", spaces);
-    printf("%s<Node#%X tag_name: '%s', type: %i, ws: %i, child_count: %i, max_children: %i, text_contents: '%s' children: %X, parent: %X>\n", spaces, n, n->tag_name, n->type, n->ws, n->child_count, n->max_children, n->text_contents, n->children, n->parent);
+    printf("%s<Node#%X tag_name: '%s', type: %i, attrs: '%s', ws: %i, child_count: %i, max_children: %i, text_contents: '%s' children: %X, parent: %X>\n", spaces, n, n->tag_name, n->type, n->attrs, n->ws, n->child_count, n->max_children, n->text_contents, n->children, n->parent);
     for (i=0; i<(n->child_count); i++) {
         c = n->children[i];
         print_tree(c, recursion_depth);
