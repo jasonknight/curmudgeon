@@ -11,6 +11,9 @@ int main(void) {
     char *              test = "/hello_world/arg1/arg2";
     if ( cur_init(&app,1) == CUR_OK) {
         cur_opts_t * opts = cur_new_options("\"test\": { \"inside\": \"Hello World\"}"); 
+        char * value;
+        cur_options(opts,"test.inside",&value);
+        printf("value is: %s\n",value);
         cur_done(&app);
     } else {
         Puts("Could not init");

@@ -566,7 +566,7 @@ int schema_table(adapter_t * adptr, char * table, ...) {
     return CUR_OK;
 }
 // Curmudgeon JSON Options
-cur_opts_t * cur_new_options(char * options_string) {
+cur_opts_t * cur_create_options(char * options_string) {
     char * fmt = "{%s}";
     int len = strlen(fmt) + strlen(options_string) + 1;
     char * opts = malloc(sizeof(char) * len);
@@ -576,6 +576,16 @@ cur_opts_t * cur_new_options(char * options_string) {
     final->original_string = strdup(options_string);
     final->json = obj;
     return final;
+}
+int cur_options(cur_opts_t * opts,char * key, char ** value) {
+    json_t * result = _drill_down(opts->json,key);
+    if (json_is_string(result)) {
+        *value = strdup(json_string_value(result));
+         if (! *value ) {
+            return CUR_WRONG_TYPE;
+         }
+    }
+    return CUR_OK;
 }
 
 // Private cur functions
@@ -589,6 +599,17 @@ json_t * _decode_json(char * str) {
     }
     return obj;
 }
+
+json_t * _drill_down(json_t * obj, char *key) {
+    char * cpy = strdup(key);
+    char * token = strsep(&cpy,".");
+    json_t * current_obj = json_object_get(obj,token);
+    while ( (token = strsep(&cpy,".")) ) {
+        current_obj = json_object_get(current_obj,token); 
+    }
+    return current_obj;
+}
+
 char * _get_pcre_error(int code) {
     switch (code) {
 
