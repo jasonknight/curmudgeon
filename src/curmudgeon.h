@@ -25,7 +25,8 @@ enum cur_return_codes {
     CUR_HANDLER_NOT_FOUND,
     CUR_DB_ERROR,
     CUR_DB_DONE,
-    CUR_SCHEMA_UPTODATE
+    CUR_SCHEMA_UPTODATE,
+    CUR_WRONG_TYPE
 };
 typedef struct curmudgeon_options cur_opts_t;
 typedef struct event event_t;
@@ -208,8 +209,8 @@ int        schema_table(adapter_t * adptr, char * table, ...);
  * You might try something like:
  *
  * static cur_opts_t * opts = cur_new_options("table: '', database:''");
- * cur_set_option("table","my_table");
- * cur_set_option("database","my_database");
+ * cur_set_options(opts,"table","my_table");
+ * cur_set_options(opts,"database","my_database");
  *
  * Note the key is in format key.key.key
  *
@@ -217,8 +218,8 @@ int        schema_table(adapter_t * adptr, char * table, ...);
  *
  * Then you would use:
  *
- * cur_set_options("database.name","my_database");
- * cur_set_options("database.table","my_table");
+ * cur_set_options(opts,"database.name","my_database");
+ * cur_set_options(opts,"database.table","my_table");
  *
  * Notice the 's' at the end.
  *
@@ -229,13 +230,18 @@ int        schema_table(adapter_t * adptr, char * table, ...);
  * cur_set_optiono => json_t
  * cur_set_options => char *
  * */
-cur_opts_t *     cur_new_options(char * options_string);
-
+cur_opts_t *     cur_create_options(char * options_string);
+/**
+ * key must be a null string, as it will be allocated for you
+ * */
+int              cur_options(cur_opts_t * opts,char * key, char ** value);
 // Private internal functions, not really intended
 // to be used by app developers, though they can if
 // they want, these functions don't really clean up
 // after themselves, they just do a job and return
 json_t *         _decode_json(char * str);
+                // Will take a key like: l1.l2.l3 and return l3
+json_t *         _drill_down(json_t * obj, char * key);
 int              _get_num_from_file(char * filename);
 int              _set_num_in_file(char * filename,int num);
 char *           _get_pcre_error(int code);

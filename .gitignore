@@ -8,5 +8,4 @@
 *.a
 *.out
 *.yy.c
-build/
 src/app/
