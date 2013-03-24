@@ -565,20 +565,21 @@ int schema_table(adapter_t * adptr, char * table, ...) {
     }
     return CUR_OK;
 }
+// General Helper Functions
 // Curmudgeon JSON Options
 cur_opts_t * cur_create_options(char * options_string) {
     char * fmt = "{%s}";
     int len = strlen(fmt) + strlen(options_string) + 1;
     char * opts = malloc(sizeof(char) * len);
     sprintf(opts,fmt,options_string);
-    json_t * obj = _decode_json(opts);
+    json_t * obj = _json_decode(opts);
     cur_opts_t * final = malloc(sizeof(cur_opts_t));
     final->original_string = strdup(options_string);
     final->json = obj;
     return final;
 }
 int cur_options(cur_opts_t * opts,char * key, char ** value) {
-    json_t * result = _drill_down(opts->json,key);
+    json_t * result = _json_drill_down(opts->json,key);
     if (json_is_string(result)) {
         *value = strdup(json_string_value(result));
          if (! *value ) {
@@ -588,9 +589,35 @@ int cur_options(cur_opts_t * opts,char * key, char ** value) {
     return CUR_OK;
 }
 
+int cur_options_set(cur_opts_t *opts, char *key, char *value) {
+    int tries = 0;
+    top:
+    if (tries > 1) {
+        printf("could not create chain...fuck\n");
+        assert(1 == 0);
+    }
+    json_t *result = _json_drill_down(opts->json,key);
+    if ( ! result ) {
+        _json_create_key_chain(opts->json,key,'s');
+        tries++;
+        goto top;
+    }
+    // the value might not be around later, so we
+    // need an explicit copy that we will have to
+    // free later on, if we want to
+    int ret = json_string_set_nocheck(result,value);
+    if (ret < 0) {
+        printf("%d\n",ret);
+        return CUR_JSON_ERROR; 
+    } else {
+        printf("Set string %s\n",value);
+    }
+    return CUR_OK;
+}
+
 // Private cur functions
 //
-json_t * _decode_json(char * str) {
+json_t * _json_decode(char * str) {
     json_error_t error;
     printf("str is: -- %s --\n",str);
     json_t * obj = json_loads(str,JSON_DECODE_ANY,&error);
@@ -600,7 +627,7 @@ json_t * _decode_json(char * str) {
     return obj;
 }
 
-json_t * _drill_down(json_t * obj, char *key) {
+json_t * _json_drill_down(json_t * obj, char *key) {
     char * cpy = strdup(key);
     char * token = strsep(&cpy,".");
     json_t * current_obj = json_object_get(obj,token);
@@ -608,6 +635,39 @@ json_t * _drill_down(json_t * obj, char *key) {
         current_obj = json_object_get(current_obj,token); 
     }
     return current_obj;
+}
+
+void _json_create_key_chain(json_t *opts, char *key, char type) {
+    char        *cpy = strdup(key);
+    json_t      *dest = opts;
+    char        *token;
+    char        *next_token = NULL;
+    while ( cpy ) {
+        next_token = strchr(cpy,'.');
+        token = strsep(&cpy,".");
+        if (! next_token ) {
+            switch (type) {
+                case 's':
+                    {
+                        json_t * json_str = json_string("");
+                        json_object_set_nocheck(dest,token,json_str);
+                        break;
+                    }
+            } 
+            return;
+        } else {
+            // We might have this key set, and just
+            // not the end of the chain, so
+            // need to check
+            json_t *tmp = _json_drill_down(dest,token);
+            if ( ! tmp ) {
+                tmp = json_object();
+                json_object_set_nocheck(dest,token,tmp);
+            }
+            dest = tmp;
+        }
+    }
+
 }
 
 char * _get_pcre_error(int code) {

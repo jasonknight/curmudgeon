@@ -91,14 +91,16 @@ int json_object_set_new_nocheck(json_t *json, const char *key, json_t *value)
     if(!key || !json_is_object(json) || json == value)
     {
         json_decref(value);
-        return -1;
+        if ( ! key ) return -2;
+        if ( ! json_is_object(json) ) return -3;
+        if ( json == value ) return -4;
     }
     object = json_to_object(json);
 
     if(hashtable_set(&object->hashtable, key, object->serial++, value))
     {
         json_decref(value);
-        return -1;
+        return -5;
     }
 
     return 0;
@@ -106,10 +108,17 @@ int json_object_set_new_nocheck(json_t *json, const char *key, json_t *value)
 
 int json_object_set_new(json_t *json, const char *key, json_t *value)
 {
+    int ret = 0;
     if(!key || !utf8_check_string(key, -1))
     {
+        if (!key) {
+            ret = -1;
+        }
+        if (!utf8_check_string(key,-1)) {
+            ret = -2;
+        }
         json_decref(value);
-        return -1;
+        return ret;
     }
 
     return json_object_set_new_nocheck(json, key, value);
