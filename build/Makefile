@@ -18,7 +18,7 @@ example: curmudgeon.o
 	${CC} ${JSON_OBJS} curmudgeon.o ${SRC}/examples/main.c -o example.bin ${FLAGS} ${MYSQL} ${LDFLAGS} ${CURMUDGE_FLAGS}
 curmudgeon.o: ${SRC}/curmudgeon.c 
 	${CC} -c ${JSON_OBJS} ${SRC}/curmudgeon.c -o curmudgeon.o ${FLAGS} ${MYSQL} ${CURMUDGE_FLAGS}
-jansson.o:${JSON}/dump.c ${JSON}/error.c ${JSON}/hashtable.c ${JSON}/load.c ${JSON}/memory.c ${JSON}/pack_unpack.c ${JSON}/load.c ${JSON}/load.c 
+jansson:${JSON}/dump.c ${JSON}/error.c ${JSON}/hashtable.c ${JSON}/load.c ${JSON}/memory.c ${JSON}/pack_unpack.c ${JSON}/load.c ${JSON}/load.c 
 	${CC} -c ${JSON}/dump.c -o dump.o ${FLAGS}
 	${CC} -c ${JSON}/error.c -o error.o ${FLAGS}
 	${CC} -c ${JSON}/hashtable.c -o hashtable.o ${FLAGS}
