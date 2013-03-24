@@ -27,7 +27,7 @@ enum cur_return_codes {
     CUR_DB_DONE,
     CUR_SCHEMA_UPTODATE
 };
-
+typedef struct curmudgeon_options cur_opts_t;
 typedef struct event event_t;
 typedef struct adapter adapter_t;
 typedef struct regex regex_t;
@@ -85,6 +85,10 @@ struct regex {
     // the system to allow overridding most functions.
     char *  (*named)(regex_t *,char *); 
     char *  (*capt)(regex_t *,int); 
+};
+struct curmudgeon_options {
+    char * original_string;
+    json_t * json;
 };
 int              cur_init( curmudgeon_t ** cur, int num_events ); // called at startup
 int              cur_done( curmudgeon_t ** cur );               // called to clean up when done.
@@ -167,10 +171,71 @@ int         db_find_by_sql(adapter_t * adptr, json_t **, char * query, ...);
 int        schema_database(adapter_t * adptr, char * database, char * charset,char * collate);
 int        schema_table(adapter_t * adptr, char * table, ...);
 
+/**
+ * General Framework Options API, AKA Helpers
+ * These functions generally return a pointer to
+ * a pre-initialized and allocated object or
+ * value that you will have to free yourself,
+ * or via a freeing helper
+ * */
+
+/**
+ * We support passing options to c functions via a
+ * JSON object. At first we were trying to use
+ * variadic functions, but that's a scary place
+ * and prone to error. Instead, the idea is that
+ * a method has default arguments, and any argument
+ * that is not provided by the JSON object receives
+ * a default value.
+ *
+ * If a function for say a query, requires a database,
+ * and a table attribute, the you would do this
+ * cur_opts_t * opts = cur_new_options("table: 'mytable',database:'mydatabase'");
+ * cur_sql_func(adptr,opts); // Not a real function,
+ * just an example.
+ *
+ * { and } will automatically be added for you.
+ *
+ * Any level or complexity of options is supported.
+ * 
+ * Generally speaking, these opts should be
+ * static so that they are only compiled once.
+ *
+ * If you need dyname values, then you can set
+ * the value of the key after you have compiled
+ * the JSON.
+ *
+ * You might try something like:
+ *
+ * static cur_opts_t * opts = cur_new_options("table: '', database:''");
+ * cur_set_option("table","my_table");
+ * cur_set_option("database","my_database");
+ *
+ * Note the key is in format key.key.key
+ *
+ * So if you have {database: {name: '', table: ''}}
+ *
+ * Then you would use:
+ *
+ * cur_set_options("database.name","my_database");
+ * cur_set_options("database.table","my_table");
+ *
+ * Notice the 's' at the end.
+ *
+ * s for string.
+ *
+ * cur_set_optioni => int
+ * cur_set_optiond => double
+ * cur_set_optiono => json_t
+ * cur_set_options => char *
+ * */
+cur_opts_t *     cur_new_options(char * options_string);
+
 // Private internal functions, not really intended
 // to be used by app developers, though they can if
 // they want, these functions don't really clean up
 // after themselves, they just do a job and return
+json_t *         _decode_json(char * str);
 int              _get_num_from_file(char * filename);
 int              _set_num_in_file(char * filename,int num);
 char *           _get_pcre_error(int code);

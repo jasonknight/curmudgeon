@@ -563,10 +563,32 @@ int schema_table(adapter_t * adptr, char * table, ...) {
         } 
         i++;
     }
+    return CUR_OK;
+}
+// Curmudgeon JSON Options
+cur_opts_t * cur_new_options(char * options_string) {
+    char * fmt = "{%s}";
+    int len = strlen(fmt) + strlen(options_string) + 1;
+    char * opts = malloc(sizeof(char) * len);
+    sprintf(opts,fmt,options_string);
+    json_t * obj = _decode_json(opts);
+    cur_opts_t * final = malloc(sizeof(cur_opts_t));
+    final->original_string = strdup(options_string);
+    final->json = obj;
+    return final;
 }
 
 // Private cur functions
 //
+json_t * _decode_json(char * str) {
+    json_error_t error;
+    printf("str is: -- %s --\n",str);
+    json_t * obj = json_loads(str,JSON_DECODE_ANY,&error);
+    if (! obj ) {
+        printf("JSON Error: %s at line %d col %d\n",error.text, error.line,error.column);
+    }
+    return obj;
+}
 char * _get_pcre_error(int code) {
     switch (code) {
 
