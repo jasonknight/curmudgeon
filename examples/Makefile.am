@@ -1,1 +1,1 @@
-SUBDIRS = json regex schema
+SUBDIRS = json options regex schema

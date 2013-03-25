@@ -42,10 +42,9 @@ AC_ARG_WITH([mysql-lib-path],
   [MYSQL_LIBS='-lmysqlclient'])
 AC_SUBST([MYSQL_LIBS])
 
-
 AC_CONFIG_FILES([Makefile                       \
                 src/Makefile                    \
-                src/jansson/Makefile            \
+                src/parson/Makefile            \
                 src/curmudgeon/Makefile         \
                 examples/Makefile           \
                 examples/json/Makefile      \

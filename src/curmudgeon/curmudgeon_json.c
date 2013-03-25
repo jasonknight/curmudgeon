@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "curmudgeon_json.h"
-#include "parson/parson.h"
+#include "parson.h"
 typedef union parson_value_value {
     char        *string; // we may want to change this.
     double       number;

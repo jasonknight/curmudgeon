@@ -1,1 +1,1 @@
-SUBDIRS = jansson curmudgeon
+SUBDIRS = parson curmudgeon
