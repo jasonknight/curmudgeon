@@ -1,6 +1,12 @@
 *.swp
 *.o
+*.lo
+.libs
+.deps
+tags
+*.so
 *~
+*.kate-swp
 *.bak
 *.bin
 *.fcgi
@@ -9,3 +15,12 @@
 *.out
 *.yy.c
 src/app/
+Makefile
+Makefile.in
+configurea
+config.sub
+config.status
+config.h
+config.h.in
+*.log
+autom4te.cache

@@ -1,0 +1,1 @@
+SUBDIRS = json regex schema
