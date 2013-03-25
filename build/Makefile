@@ -4,7 +4,6 @@ CURMUDGE_FLAGS=-lpcre -Wno-incompatible-pointer-types-discards-qualifiers -g
 MYSQL=-I/usr/include/mysql -DBIG_JOINS=1  -fno-strict-aliasing  -g -L/usr/lib/x86_64-linux-gnu -lmysqlclient
 JSON=${SRC}/parson
 JSON_OBJS=${JSON}/parson.o
-#JSON_OBJS=dump.o error.o hashtable.o load.o memory.o pack_unpack.o strbuffer.o utf.o value.o strconv.o
 SRC=../src
 CC=clang
 all:
@@ -16,9 +15,9 @@ schema: curmudgeon.o
 regex: curmudgeon.o 
 	${CC} ${JSON_OBJS} curmudgeon.o ${SRC}/examples/regex.c -o regex.bin ${FLAGS} ${MYSQL} ${LDFLAGS} ${CURMUDGE_FLAGS}
 example: curmudgeon.o 
-	${CC} ${JSON_OBJS} curmudgeon.o ${SRC}/examples/main.c -o example.bin ${FLAGS} ${MYSQL} ${LDFLAGS} ${CURMUDGE_FLAGS}
-curmudgeon.o: ${SRC}/curmudgeon/curmudgeon.c ${SRC}/curmudgeon/curmudgeon_json.c 
-	${CC} -c ${JSON_OBJS} ${SRC}/curmudgeon/curmudgeon.c ${SRC}/curmudgeon/curmudgeon_json.c -o curmudgeon.o ${FLAGS} ${MYSQL} ${CURMUDGE_FLAGS}
+	${CC} ${JSON_OBJS} curmudgeon.o curmudgeon_json.o ${SRC}/examples/main.c -o example.bin ${FLAGS} ${MYSQL} ${LDFLAGS} ${CURMUDGE_FLAGS}
+curmudgeon.o: ${SRC}/curmudgeon/curmudgeon.c
+	${CC}  ${JSON_OBJS} curmudgeon_json.o -c ${SRC}/curmudgeon/curmudgeon.c -o curmudgeon.o ${FLAGS} ${MYSQL} ${CURMUDGE_FLAGS}
 curmudgeon_json.o: ${SRC}/curmudgeon/curmudgeon_json.c 
 	${CC} -c ${JSON_OBJS} ${SRC}/curmudgeon/curmudgeon_json.c -o curmudgeon_json.o ${FLAGS} ${MYSQL} ${CURMUDGE_FLAGS}
 

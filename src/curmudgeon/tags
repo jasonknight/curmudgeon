@@ -17,11 +17,15 @@ CUR_MYSQL	curmudgeon.h	/^    CUR_MYSQL$/;"	e	enum:cur_adapters
 CUR_OK	curmudgeon.h	/^    CUR_OK,$/;"	e	enum:cur_return_codes
 CUR_SCHEMA_UPTODATE	curmudgeon.h	/^    CUR_SCHEMA_UPTODATE,$/;"	e	enum:cur_return_codes
 CUR_WRONG_TYPE	curmudgeon.h	/^    CUR_WRONG_TYPE,$/;"	e	enum:cur_return_codes
+PARSON_Value_Value	curmudgeon_json.c	/^} PARSON_Value_Value;$/;"	t	typeref:union:parson_value_value	file:
 SET_MYSQL_ERROR	curmudgeon.h	15;"	d
 _compare	curmudgeon.c	/^int _compare(const char * s1, const char * s2) {$/;"	f
 _free_db_row_cols	curmudgeon.c	/^void _free_db_row_cols(db_row_t * row) {$/;"	f
 _get_num_from_file	curmudgeon.c	/^int _get_num_from_file(char * filename) {$/;"	f
 _get_pcre_error	curmudgeon.c	/^char * _get_pcre_error(int code) {$/;"	f
+_json_decode	curmudgeon_json.c	/^cur_json_t * _json_decode(char *str) {$/;"	f
+_json_decode_file	curmudgeon_json.c	/^cur_json_t * _json_decode_file(char *path) {$/;"	f
+_json_value_to_s	curmudgeon_json.c	/^char * _json_value_to_s(PARSON_Value * value,int depth) {$/;"	f
 _regex_named	curmudgeon.c	/^char * _regex_named(regex_t * re,char * n) {$/;"	f
 _regex_nummed	curmudgeon.c	/^char * _regex_nummed(regex_t * re, int num) {$/;"	f
 _set_num_in_file	curmudgeon.c	/^int _set_num_in_file(char * filename,int num) {$/;"	f
@@ -30,32 +34,43 @@ adapter	curmudgeon.h	/^struct adapter {$/;"	s
 adapter_t	curmudgeon.h	/^typedef struct adapter adapter_t;$/;"	t	typeref:struct:adapter
 argc	curmudgeon.h	/^    int argc;$/;"	m	struct:event
 args	curmudgeon.h	/^    char **args;$/;"	m	struct:event
+array	curmudgeon_json.c	/^    PARSON_Array  *array;$/;"	m	union:parson_value_value	file:
 backrefc	curmudgeon.h	/^    int backrefc; \/\/back ref count$/;"	m	struct:regex
+boolean	curmudgeon_json.c	/^    int          boolean;$/;"	m	union:parson_value_value	file:
 callback	curmudgeon.h	/^    callback_t  callback;$/;"	m	struct:registered_event
 callback_t	curmudgeon.h	/^typedef int (*callback_t)(event_t **);$/;"	t
+capacity	curmudgeon_json.c	/^    size_t       capacity;$/;"	m	struct:parson_array_t	file:
+capacity	curmudgeon_json.c	/^    size_t       capacity;$/;"	m	struct:parson_object_t	file:
 capt	curmudgeon.h	/^    char * (*capt)(regex_t *,int); $/;"	m	struct:regex
 captc	curmudgeon.h	/^    int captc; \/\/ capture count$/;"	m	struct:regex
 code	curmudgeon.h	/^    pcre * code;$/;"	m	struct:regex
 cols	curmudgeon.h	/^    db_col_t **cols;$/;"	m	struct:db_row
 connected	curmudgeon.h	/^    short           connected;$/;"	m	struct:adapter
+count	curmudgeon_json.c	/^    size_t       count;$/;"	m	struct:parson_array_t	file:
+count	curmudgeon_json.c	/^    size_t       count;$/;"	m	struct:parson_object_t	file:
 cur	curmudgeon.h	/^    curmudgeon_t * cur;$/;"	m	struct:event
 cur_adapters	curmudgeon.h	/^enum cur_adapters {$/;"	g
 cur_call_handler	curmudgeon.c	/^int cur_call_handler( curmudgeon_t * cur,event_t ** e_dest ) { $/;"	f
-cur_create_options	curmudgeon.c	/^cur_opts_t * cur_create_options(char *options_string) {$/;"	f
-cur_create_options_from_file	curmudgeon.c	/^cur_opts_t * cur_create_options_from_file(char *path) {$/;"	f
 cur_done	curmudgeon.c	/^int cur_done( curmudgeon_t ** to_free ) {$/;"	f
 cur_free_adapter	curmudgeon.c	/^int cur_free_adapter(adapter_t ** adptr) {$/;"	f
 cur_free_regex	curmudgeon.c	/^int cur_free_regex(regex_t ** re_dest) {$/;"	f
 cur_init	curmudgeon.c	/^int cur_init( curmudgeon_t ** dest, int num_events ) {$/;"	f
+cur_json_array	curmudgeon_json.c	/^cur_json_t * cur_json_array() { $/;"	f
 cur_json_array_append	curmudgeon_json.c	/^int cur_json_array_append(cur_json_t * arr, cur_json_t * val) {$/;"	f
+cur_json_dumps	curmudgeon_json.c	/^char * cur_json_dumps(cur_json_t * obj) {$/;"	f
+cur_json_from_file	curmudgeon_json.c	/^cur_json_t * cur_json_from_file(char * filename) {$/;"	f
+cur_json_is_array	curmudgeon_json.c	/^int cur_json_is_array(cur_json_t * obj) {$/;"	f
 cur_json_is_string	curmudgeon_json.c	/^int cur_json_is_string(cur_json_t * obj) {$/;"	f
-cur_json_string_value	curmudgeon_json.c	/^const char * cur_json_string_value(cur_json_t * obj) {$/;"	f
+cur_json_object	curmudgeon_json.c	/^cur_json_t * cur_json_object() {$/;"	f
+cur_json_object_get	curmudgeon_json.c	/^cur_json_t * cur_json_object_get(cur_json_t * obj, char * key) {$/;"	f
+cur_json_object_set	curmudgeon_json.c	/^int cur_json_object_set(cur_json_t * obj, char * key, cur_json_t * val) {$/;"	f
+cur_json_string	curmudgeon_json.c	/^cur_json_t * cur_json_string(char * str) { $/;"	f
+cur_json_string_value	curmudgeon_json.c	/^char * cur_json_string_value(cur_json_t * obj) {$/;"	f
 cur_json_t	curmudgeon_json.h	/^typedef struct curmudgeon_json cur_json_t;$/;"	t	typeref:struct:curmudgeon_json
+cur_jsons	curmudgeon_json.c	/^char * cur_jsons(cur_json_t * obj,char * key) {$/;"	f
+cur_jsons_set	curmudgeon_json.c	/^int cur_jsons_set(cur_json_t * obj, char * key, char * value) {$/;"	f
 cur_list_events	curmudgeon.c	/^int cur_list_events( curmudgeon_t ** cur ) {$/;"	f
 cur_match	curmudgeon.c	/^int cur_match(regex_t ** reg_dest, char * haystack, ...) {$/;"	f
-cur_optiono	curmudgeon.c	/^int cur_optiono(cur_opts_t * opts,char * key, cur_json_t ** value) {$/;"	f
-cur_options	curmudgeon.c	/^int cur_options(cur_opts_t * opts,char * key, char ** value) {$/;"	f
-cur_options_set	curmudgeon.c	/^int cur_options_set(cur_opts_t *opts, char *key, char *value) {$/;"	f
 cur_opts_t	curmudgeon.h	/^typedef struct curmudgeon_options cur_opts_t;$/;"	t	typeref:struct:curmudgeon_options
 cur_parse_request	curmudgeon.c	/^int cur_parse_request( const char * url, event_t ** dest ) {$/;"	f
 cur_regex	curmudgeon.c	/^int cur_regex(regex_t ** re_dest,char * pattern) {$/;"	f
@@ -63,7 +78,6 @@ cur_register_event	curmudgeon.c	/^int cur_register_event( curmudgeon_t ** dest, 
 cur_return_codes	curmudgeon.h	/^enum cur_return_codes {$/;"	g
 curmudgeon	curmudgeon.h	/^typedef struct curmudgeon {$/;"	s
 curmudgeon_json	curmudgeon_json.c	/^struct curmudgeon_json {$/;"	s	file:
-curmudgeon_json	curmudgeon_json.h	/^struct curmudgeon_json {$/;"	s
 curmudgeon_options	curmudgeon.h	/^struct curmudgeon_options {$/;"	s
 curmudgeon_t	curmudgeon.h	/^} curmudgeon_t;$/;"	t	typeref:struct:curmudgeon
 database_name	curmudgeon.h	/^    char *         database_name;$/;"	m	struct:adapter
@@ -87,15 +101,14 @@ event	curmudgeon.h	/^struct event {$/;"	s
 event_t	curmudgeon.h	/^typedef struct event event_t;$/;"	t	typeref:struct:event
 events	curmudgeon.h	/^    registered_event_t **events;$/;"	m	struct:curmudgeon
 events_length	curmudgeon.h	/^    int events_length;$/;"	m	struct:curmudgeon
-existing_value	curmudgeon_json.c	/^    PARSON_Value * existing_value = parson_object_get_value(obj->internal_object,key);$/;"	v
 field_names	curmudgeon.h	/^    char **field_names;$/;"	m	struct:db_row
 flags	curmudgeon.h	/^    unsigned long   flags;$/;"	m	struct:adapter
 full_url	curmudgeon.h	/^    char *full_url;$/;"	m	struct:event
 haystack	curmudgeon.h	/^    char *haystack; \/\/ used when getting captures because those$/;"	m	struct:regex
 host	curmudgeon.h	/^    char *         host;$/;"	m	struct:adapter
 internal_value	curmudgeon_json.c	/^   PARSON_Value * internal_value; $/;"	m	struct:curmudgeon_json	file:
-internal_value	curmudgeon_json.h	/^   JSON_Value * internal_value; $/;"	m	struct:curmudgeon_json
 ip	curmudgeon.h	/^    char *ip;$/;"	m	struct:event
+items	curmudgeon_json.c	/^    PARSON_Value **items;$/;"	m	struct:parson_array_t	file:
 json	curmudgeon.h	/^    cur_json_t * json;$/;"	m	struct:curmudgeon_options
 last_errno	curmudgeon.h	/^    unsigned int    last_errno;$/;"	m	struct:adapter
 last_error	curmudgeon.h	/^    char *         last_error;$/;"	m	struct:adapter
@@ -110,9 +123,17 @@ name_length	curmudgeon.h	/^    int name_length;$/;"	m	struct:db_col
 namec	curmudgeon.h	/^    int namec; \/\/ named capt count$/;"	m	struct:regex
 named	curmudgeon.h	/^    char * (*named)(regex_t *,char *); $/;"	m	struct:regex
 names	curmudgeon.h	/^    unsigned char *names;$/;"	m	struct:regex
+names	curmudgeon_json.c	/^    char **names;$/;"	m	struct:parson_object_t	file:
+null	curmudgeon_json.c	/^    int          null;$/;"	m	union:parson_value_value	file:
+number	curmudgeon_json.c	/^    double       number;$/;"	m	union:parson_value_value	file:
+object	curmudgeon_json.c	/^    PARSON_Object *object;$/;"	m	union:parson_value_value	file:
 options	curmudgeon.h	/^    int options; \/\/ options used$/;"	m	struct:regex
 original_string	curmudgeon.h	/^    char *original_string;$/;"	m	struct:curmudgeon_options
 ovector	curmudgeon.h	/^    int * ovector;$/;"	m	struct:regex
+parson_array_t	curmudgeon_json.c	/^struct parson_array_t {$/;"	s	file:
+parson_object_t	curmudgeon_json.c	/^struct parson_object_t {$/;"	s	file:
+parson_value_t	curmudgeon_json.c	/^struct parson_value_t {$/;"	s	file:
+parson_value_value	curmudgeon_json.c	/^typedef union parson_value_value {$/;"	u	file:
 pass	curmudgeon.h	/^    char *         pass;$/;"	m	struct:adapter
 pattern	curmudgeon.h	/^    char *pattern;$/;"	m	struct:regex
 port	curmudgeon.h	/^    unsigned int    port;$/;"	m	struct:adapter
@@ -127,9 +148,13 @@ schema_database	curmudgeon.c	/^int schema_database(adapter_t * a, char * databas
 schema_table	curmudgeon.c	/^int schema_table(adapter_t * adptr, char * table, ...) {$/;"	f
 schema_version_file	curmudgeon.h	/^    char *schema_version_file;$/;"	m	struct:adapter
 schema_version_file	curmudgeon.h	/^    char *schema_version_file;$/;"	m	struct:curmudgeon
+string	curmudgeon_json.c	/^    char        *string; \/\/ we may want to change this.$/;"	m	union:parson_value_value	file:
 study	curmudgeon.h	/^    pcre_extra * study;$/;"	m	struct:regex
 type	curmudgeon.h	/^    int             type;$/;"	m	struct:adapter
+type	curmudgeon_json.c	/^    PARSON_Value_Type     type;$/;"	m	struct:parson_value_t	file:
 used	curmudgeon.h	/^    short used; \/\/ just a tag to see if this has already been used$/;"	m	struct:regex
 user	curmudgeon.h	/^    char *         user;$/;"	m	struct:adapter
 value	curmudgeon.h	/^    char *value;$/;"	m	struct:db_col
+value	curmudgeon_json.c	/^    PARSON_Value_Value    value;$/;"	m	struct:parson_value_t	file:
 value_length	curmudgeon.h	/^    int value_length;$/;"	m	struct:db_col
+values	curmudgeon_json.c	/^    PARSON_Value **values;$/;"	m	struct:parson_object_t	file:

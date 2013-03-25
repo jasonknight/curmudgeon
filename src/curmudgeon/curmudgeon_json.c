@@ -173,12 +173,35 @@ char * _json_value_to_s(PARSON_Value * value,int depth) {
         new_child_text = malloc(bytes_to_malloc);
         sprintf(new_child_text,fmt,value->value.string);
         return new_child_text;
+   } else if (value->type == JSONArray) {
+        fmt = "[ %s ]";
+        char * tfmt;
+        PARSON_Array * obj = value->value.array;
+        for (i = 0; i < obj->count; i++) {
+            if (i == obj->count - 1) {
+                tfmt = "%s %s";
+            } else {
+                tfmt = "%s %s,";
+            }
+            tmp = _json_value_to_s(obj->items[i],++depth);
+            bytes_to_malloc = sizeof(char) * ( strlen(child_text) + strlen(tmp) + strlen(tfmt) + 1 );
+            new_child_text = malloc(bytes_to_malloc);
+            sprintf(new_child_text, tfmt, child_text, tmp);
+            free(child_text);
+            free(tmp);
+            child_text = new_child_text;
+        }
+        bytes_to_malloc = sizeof(char) * ( strlen(fmt) + strlen(child_text) + 5);
+        new_child_text = malloc(bytes_to_malloc);
+        sprintf(new_child_text,fmt,child_text);
+        free(child_text);
+        return new_child_text;
+
    }
    return NULL;
 }
 char * cur_json_dumps(cur_json_t * obj) {
-    printf("Dump [[ %s ]]\n",_json_value_to_s(obj->internal_value,0));
-    return NULL;
+    return _json_value_to_s(obj->internal_value,0);
 }
 cur_json_t * cur_json_array() { 
     cur_json_t * obj = malloc(sizeof(cur_json_t));
