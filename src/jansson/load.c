@@ -770,6 +770,7 @@ error:
 static json_t *parse_value(lex_t *lex, size_t flags, json_error_t *error)
 {
     json_t *json;
+    printf("[%c]",lex->token);
 
     switch(lex->token) {
         case TOKEN_STRING: {
@@ -808,7 +809,7 @@ static json_t *parse_value(lex_t *lex, size_t flags, json_error_t *error)
             break;
 
         case TOKEN_INVALID:
-            error_set(error, lex, "invalid token");
+            error_set(error, lex, "xxinvalid token");
             return NULL;
 
         default:

@@ -9,10 +9,9 @@
  * */
 #include <my_global.h>
 #include <mysql.h>
-#include <jansson.h>
 #include <assert.h>
 #include <pcre.h>
-#include <iconv.h>
+#include "curmudgeon_json.h"
 #define SET_MYSQL_ERROR a->last_error = strdup(mysql_error(a->myconn)); \
             a->last_errno = mysql_errno(a->myconn); \
             printf("You have MYSQL errors: (%d) -- %s \n",a->last_errno,a->last_error); \
@@ -91,7 +90,7 @@ struct regex {
 };
 struct curmudgeon_options {
     char *original_string;
-    json_t * json;
+    cur_json_t * json;
 };
 int              cur_init( curmudgeon_t **cur, int num_events ); // called at startup
 int              cur_done( curmudgeon_t **cur );               // called to clean up when done.
@@ -157,10 +156,10 @@ int         db_select_db( adapter_t * adptr, char *db);
 int         db_query(adapter_t * adptr, char *query);
 int         db_free_result( adapter_t * adptr );
 int         db_next( adapter_t * adptr, db_row_t **row );
-int         db_next_as_json( adapter_t * adptr, json_t **obj,db_row_t **);
-int         db_result_as_json( adapter_t * adptr, json_t **obj);
-int         db_find_by(adapter_t * adptr, json_t **, char *table, char *field, char *value, char *select);
-int         db_find_by_sql(adapter_t * adptr, json_t **, char *query, ...);
+int         db_next_as_json( adapter_t * adptr, cur_json_t **obj,db_row_t **);
+int         db_result_as_json( adapter_t * adptr, cur_json_t **obj);
+int         db_find_by(adapter_t * adptr, cur_json_t **, char *table, char *field, char *value, char *select);
+int         db_find_by_sql(adapter_t * adptr, cur_json_t **, char *query, ...);
 /**
  * Schema and migration functions. The basic idea is that there is a pickup
  * file in the app/conf directory called schema.version. When we call one
@@ -229,23 +228,21 @@ int        schema_table(adapter_t * adptr, char *table, ...);
  *
  * cur_set_optioni => int
  * cur_set_optiond => double
- * cur_set_optiono => json_t
+ * cur_set_optiono => cur_json_t
  * cur_set_options => char *
  * */
-cur_opts_t *     cur_create_options(char *options_string);
-/**
- * key must be a null string, as it will be allocated for you
- * */
-int              cur_options(cur_opts_t *opts,char *key, char **value);
-int              cur_options_set(cur_opts_t *opts, char *key, char *value);
+//cur_opts_t *     cur_create_options(char *options_string);
+//cur_opts_t *     cur_create_options_from_file(char *path);
+///**
+// * key must be a null string, as it will be allocated for you
+// * */
+//int              cur_options(cur_opts_t *opts,char *key, char **value);
+//int              cur_optiono(cur_opts_t *opts,char *key, cur_json_t **value);
+//int              cur_options_set(cur_opts_t *opts, char *key, char *value);
 // Private internal functions, not really intended
 // to be used by app developers, though they can if
 // they want, these functions don't really clean up
 // after themselves, they just do a job and return
-json_t *         _json_decode(char *str);
-                // Will take a key like: l1.l2.l3 and return l3
-json_t *         _json_drill_down(json_t *obj, char *key);
-void             _json_create_key_chain(json_t *opts, char *key, char type);
 int              _get_num_from_file(char *filename);
 int              _set_num_in_file(char *filename,int num);
 char *           _get_pcre_error(int code);
