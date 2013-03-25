@@ -47,10 +47,10 @@ AC_CONFIG_FILES([Makefile                       \
                 src/Makefile                    \
                 src/jansson/Makefile            \
                 src/curmudgeon/Makefile         \
-                src/examples/Makefile           \
-                src/examples/json/Makefile      \
-                src/examples/options/Makefile   \
-                src/examples/regex/Makefile     \
-                src/examples/schema/Makefile    \
+                examples/Makefile           \
+                examples/json/Makefile      \
+                examples/options/Makefile   \
+                examples/regex/Makefile     \
+                examples/schema/Makefile    \
                 ])
 AC_OUTPUT

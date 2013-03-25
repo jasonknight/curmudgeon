@@ -1,1 +1,1 @@
-SUBDIRS = jansson curmudgeon examples
+SUBDIRS = jansson curmudgeon
