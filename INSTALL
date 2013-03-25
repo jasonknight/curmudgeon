@@ -1,1 +1,6 @@
- 
+HOW TO COMPILE FROM A CLEAN GIT REPOSITORY
+
+aclocal
+libtoolize
+automake --add-missing
+autoreconf
