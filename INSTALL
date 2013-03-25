@@ -4,3 +4,8 @@ aclocal
 libtoolize
 automake --add-missing
 autoreconf
+
+
+HOW TO CLEAN GIT REPOSITORY FROM ALL UNESSENTIAL FILES
+
+git clean -dfx
