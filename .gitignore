@@ -1,5 +1,6 @@
 *.swp
 *.o
+*.la
 *.lo
 .libs
 .deps
@@ -31,3 +32,11 @@ missing
 autom4te.cache
 m4
 *.m4
+libtool
+stamp-h1
+
+# binaries
+json
+regex
+schema
+options
