@@ -41,10 +41,10 @@ int main(void) {
         
         // loop each row and output some json
         db_query(adptr,"SELECT * FROM people");
-        json_t * jrow = NULL;
+        cur_json_t * jrow = NULL;
         db_row_t * row2 = NULL;
         while ( db_next_as_json(adptr,&jrow,&row2) == CUR_OK ) {
-            char * obj = json_dumps(jrow,0);
+            char * obj = cur_json_dumps(jrow);
             printf("%s\n",obj);
             free(obj);
         }
@@ -52,18 +52,18 @@ int main(void) {
         
         // Get the whole result set as a json_array
         db_query(adptr,"SELECT * FROM people");
-        json_t * all_rows = NULL;
+        cur_json_t * all_rows = NULL;
         db_result_as_json(adptr,&all_rows);
-        char * rows_string = json_dumps(all_rows,0);
+        char * rows_string = cur_json_dumps(all_rows);
         //printf("%s\n",rows_string);
         free(rows_string);
 
-        json_t * find_test = NULL; 
+        cur_json_t * find_test = NULL; 
         db_find_by(adptr,&find_test,"people","first_name","jason",NULL);
         //printf("%s\n",json_dumps(find_test,0));
-        json_t * find_sql = NULL;
+        cur_json_t * find_sql = NULL;
         db_find_by_sql(adptr,&find_sql,"SELECT * FROM %s WHERE %s = %s","people","first_name","'jason'",NULL);
-        printf("Returned json is: %s\n",json_dumps(find_sql,0));
+        printf("Returned json is: %s\n",cur_json_dumps(find_sql));
         cur_call_handler(app,&event);
         cur_done(&app);
     } else {
