@@ -15,8 +15,9 @@ struct haml_node {
     haml_node_t **  children;
     haml_node_t *   parent;
 };
-haml_node_t *   haml_parse_file(char * name);
-haml_node_t *   haml_init_node(char * tag_name, int ws, char * id,char * classes);
+
+haml_node_t *   haml_parse_file(char *name);
+haml_node_t *   haml_init_node(char *tag_name, int ws, char *id, char *classes);
 haml_node_t *   haml_find_parent(haml_node_t *);
 haml_node_t *   haml_append_new_node(haml_node_t *, char *, char *,char *);
 int             haml_parse_directive(haml_node_t * root,char * directive);

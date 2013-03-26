@@ -25,6 +25,7 @@ AC_FUNC_REALLOC
 AC_CHECK_FUNCS([strdup])
 
 AM_PROG_LIBTOOL
+AM_PROG_LEX
 
 PKG_CHECK_MODULES([LIBPCRE], [libpcre])
 
@@ -42,14 +43,16 @@ AC_ARG_WITH([mysql-lib-path],
   [MYSQL_LIBS='-lmysqlclient'])
 AC_SUBST([MYSQL_LIBS])
 
-AC_CONFIG_FILES([Makefile                       \
-                src/Makefile                    \
-                src/parson/Makefile            \
-                src/curmudgeon/Makefile         \
-                examples/Makefile           \
-                examples/json/Makefile      \
-                examples/options/Makefile   \
-                examples/regex/Makefile     \
-                examples/schema/Makefile    \
+AC_CONFIG_FILES([Makefile                         \
+                src/Makefile                      \
+                src/parson/Makefile               \
+                src/haml_lexer/Makefile           \
+                src/curmudgeon/Makefile           \
+                examples/Makefile                 \
+                examples/json/Makefile            \
+                examples/haml_lexer/Makefile      \
+                examples/options/Makefile         \
+                examples/regex/Makefile           \
+                examples/schema/Makefile          \
                 ])
 AC_OUTPUT

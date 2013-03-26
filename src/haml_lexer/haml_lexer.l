@@ -23,16 +23,6 @@ int yywrap() {
     return 1;
 }
 
-int main(void) {
-    current_whitespace_length = 0;
-    root_node = haml_init_node("_r00t_", -2, "", "");
-    last_created_node = root_node;
-
-    haml_node_t * root_node = haml_parse_file("template.haml"); 
-    //print_tree(root_node,0);
-    printf("%s\n", haml_node_as_xml(root_node,1));
-}
-
 int haml_set_options(char * opts) {
     char *cpy = malloc(sizeof(char) * strlen(opts));
     int i = 1;
@@ -60,14 +50,18 @@ int haml_parse_directive(haml_node_t * root, char * directive) {
     return 0;
 }
 
-haml_node_t * haml_parse_file(char * name) {
+haml_node_t * haml_parse_file(char *name) {
     FILE *myfile = fopen(name, "r");
     if (!myfile) {
         printf("Can't open file '%s'\n",name);
         return NULL;
+    } else {
+        printf("Opened file %s\n", name);
     }
     yyin = myfile;
+    printf("calling yylex\n");
     yylex();
+    printf("yylex called\n");
     fclose(myfile);
     return root_node;
 }

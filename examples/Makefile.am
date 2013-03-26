@@ -1,1 +1,1 @@
-SUBDIRS = json options regex schema
+SUBDIRS = json options regex schema haml_lexer
