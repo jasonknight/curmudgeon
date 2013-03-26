@@ -44,6 +44,21 @@ AC_ARG_WITH([mysql-lib-path],
 AC_SUBST([MYSQL_LIBS])
 
 
+# MF: Get libtidy locations
+AC_ARG_WITH([tidy-include-path],
+  [AS_HELP_STRING([--with-tidy-include-path],
+    [location of the tidy headers, defaults to /usr/include/tidy])],
+  [TIDY_CFLAGS="-I$withval"],
+  [TIDY_CFLAGS='-I/usr/include/tidy'])
+AC_SUBST([TIDY_CFLAGS])
+
+AC_ARG_WITH([tidy-lib-path],
+  [AS_HELP_STRING([--with-tidy-lib-path], [location of the tidy libraries])],
+  [TIDY_LIBS="-L$withval -ltidy"],
+  [TIDY_LIBS='-ltidy'])
+AC_SUBST([TIDY_LIBS])
+
+
 # DOXYGEN STUFF
 
 AC_CHECK_PROGS([DOXYGEN], [doxygen])
@@ -67,6 +82,7 @@ AC_CONFIG_FILES([Makefile                         \
                 doc/Makefile                      \
                 examples/Makefile                 \
                 examples/json/Makefile            \
+                examples/tidy/Makefile            \
                 examples/haml_lexer/Makefile      \
                 examples/options/Makefile         \
                 examples/regex/Makefile           \
