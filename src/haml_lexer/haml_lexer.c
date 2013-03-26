@@ -1840,11 +1840,11 @@ haml_node_t * haml_parse_file(char *name) {
         return NULL;
     } else {
         printf("Opened file %s\n", name);
-    } 
+    }
     yyin = myfile;
-    printf("xxx\n");
+    printf("calling yylex\n");
     yylex();
-    printf("xxx\n");
+    printf("yylex called\n");
     fclose(myfile);
     return root_node;
 }

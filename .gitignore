@@ -35,3 +35,8 @@ m4
 libtool
 stamp-h1
 ylwrap
+doc/html
+doc/latex
+Doxyfile
+doxyfile.stamp
+

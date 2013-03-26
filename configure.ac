@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.68])
-AC_INIT([FULL-PACKAGE-NAME], [VERSION], [BUG-REPORT-ADDRESS])
-AM_INIT_AUTOMAKE(foo, 1.0)
+AC_INIT([CURMUDGEON], [0.0.1], [office@red-e.eu])
+AM_INIT_AUTOMAKE(curmudgeon, 0.0.1)
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -53,8 +53,10 @@ if test -z "$DOXYGEN";
 fi
 
 AM_CONDITIONAL([HAVE_DOXYGEN], 
-[test -n "$DOXYGEN"])AM_COND_IF([HAVE_DOXYGEN], [AC_CONFIG_FILES([docs/Doxyfile])])
+[test -n "$DOXYGEN"])AM_COND_IF([HAVE_DOXYGEN], [AC_CONFIG_FILES([doc/Doxyfile])])
 
+
+prefix=/tmp/curmudgeon
 
 
 AC_CONFIG_FILES([Makefile                         \
@@ -62,6 +64,7 @@ AC_CONFIG_FILES([Makefile                         \
                 src/parson/Makefile               \
                 src/haml_lexer/Makefile           \
                 src/curmudgeon/Makefile           \
+                doc/Makefile                      \
                 examples/Makefile                 \
                 examples/json/Makefile            \
                 examples/haml_lexer/Makefile      \

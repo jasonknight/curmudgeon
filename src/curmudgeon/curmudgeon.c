@@ -1,13 +1,25 @@
+/**
+ *  @file curmudgeon.c
+ *  @brief Brief description of what this file does
+ */
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stddef.h>
 #include <curmudgeon.h>
-// The cur acts as a kind of global store, it holds all
-// the events that are registered etc. You can to call
-// this function first, and pass a reference to a curmudgeon_t *
-//
-// That's right, **. Just means a pointer to a point to a value.
+
+/**
+ * @brief Brief description of cur_init
+ * @return describe what it returns
+ * @param[out] dest The memory area to copy to.
+ * @param[in] num_events Another attribute description
+ * 
+ * The cur acts as a kind of global store, it holds all
+ * the events that are registered etc. You can to call
+ * this function first, and pass a reference to a curmudgeon_t *
+ * That's right, **. Just means a pointer to a point to a value.
+ */
 int cur_init( curmudgeon_t ** dest, int num_events ) {
     curmudgeon_t * cur;
     cur = malloc(sizeof(curmudgeon_t *));
@@ -27,9 +39,16 @@ int cur_init( curmudgeon_t ** dest, int num_events ) {
     *dest = cur; // notice how we set *dest here, i.e. we overwrite the pointer that points to the value.
     return CUR_OK;
 }
-// Really just to be good citizens. cur_done should only be called
-// before app exit. Just cleanup code. This should not be called
-// after each request!
+
+/**
+ * @brief Brief description of cur_done
+ * @return describe what it returns
+ * @param[out] to_free The memory area to copy to.
+ * 
+ * Really just to be good citizens. cur_done should only be called
+ * before app exit. Just cleanup code. This should not be called
+ * after each request!
+ */
 int cur_done( curmudgeon_t ** to_free ) {
     curmudgeon_t * cur = *to_free;
     int i;
@@ -44,7 +63,8 @@ int cur_done( curmudgeon_t ** to_free ) {
     }
     return CUR_OK;
 }
-int cur_free_adapter(adapter_t ** adptr) {
+
+int cur_free_adapter(adapter_t ** adptr /**< [in] another way to document function parameters */) {
     adapter_t * a = *adptr;
     // If we are connected to the database, we
     // should close out that connection.
@@ -56,8 +76,14 @@ int cur_free_adapter(adapter_t ** adptr) {
     free(a);
     return CUR_OK;
 }
-// Holding/testing function, the real function will probably be 
-// very different.
+
+
+/**
+ * @param url,dest Describe all parameters in one go
+ * 
+ * Holding/testing function, the real function will probably be 
+ * very different.
+ */
 int cur_parse_request( const char * url, event_t ** dest ) {
     event_t * e;
     e = malloc(sizeof(event_t));
