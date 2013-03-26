@@ -10,7 +10,7 @@
 [\r\n\f]+                    { /*printf("NLS: %d\n",strlen(yytext)); */}
 [%\.#][a-zA-Z\-_.#]+         { haml_create_tag_node(strdup(yytext)); }
 \{.+\}                       { haml_set_options(strdup(yytext)); }
-=.+$                 { haml_parse_directive(last_created_node,strdup(yytext)); }
+=.+$                         { haml_parse_directive(haml_last_created_node,strdup(yytext)); }
 [^ \r\n\f\t\{#%\.]+.*$       { haml_create_text_node(strdup(yytext)); }
 .                            { printf("unknown char %s\n",yytext);}
 %%
@@ -23,16 +23,6 @@ int yywrap() {
     return 1;
 }
 
-int main(void) {
-    current_whitespace_length = 0;
-    root_node = haml_init_node("_r00t_", -2, "", "");
-    last_created_node = root_node;
-
-    haml_node_t * root_node = haml_parse_file("template.haml"); 
-    //print_tree(root_node,0);
-    printf("%s\n", haml_node_as_xml(root_node,1));
-}
-
 int haml_set_options(char * opts) {
     char *cpy = malloc(sizeof(char) * strlen(opts));
     int i = 1;
@@ -42,8 +32,8 @@ int haml_set_options(char * opts) {
         i++;
     }
     cpy[i] = '\0';
-    last_created_node->attrs = realloc(last_created_node->attrs, strlen(last_created_node->attrs) + strlen(opts));
-    strcat(last_created_node->attrs,cpy);
+    haml_last_created_node->attrs = realloc(haml_last_created_node->attrs, strlen(haml_last_created_node->attrs) + strlen(opts));
+    strcat(haml_last_created_node->attrs,cpy);
     return 0;
 }
 
@@ -60,16 +50,22 @@ int haml_parse_directive(haml_node_t * root, char * directive) {
     return 0;
 }
 
-haml_node_t * haml_parse_file(char * name) {
+haml_node_t * haml_parse_file(char *name) {
     FILE *myfile = fopen(name, "r");
     if (!myfile) {
         printf("Can't open file '%s'\n",name);
         return NULL;
+    } else {
+        printf("Opened file %s\n", name);
+    }
+    if ( ! haml_root_node ) {
+        haml_root_node = haml_init_node("_r00t_",0,"","");
+        haml_last_created_node = haml_root_node;
     }
     yyin = myfile;
     yylex();
     fclose(myfile);
-    return root_node;
+    return haml_root_node;
 }
 
 haml_node_t * haml_init_node(char *tag_name, int ws, char * id, char * classes) {
@@ -99,7 +95,7 @@ haml_node_t * haml_init_node(char *tag_name, int ws, char * id, char * classes) 
 
 haml_node_t * haml_append_new_node(haml_node_t *parent, char *tag_name, char * id,char *classes) {
 
-    haml_node_t * new_child  = haml_init_node(++tag_name, current_whitespace_length, id,classes);
+    haml_node_t * new_child  = haml_init_node(++tag_name, haml_current_whitespace_length, id,classes);
     if (parent->child_count == parent->max_children - 1) {
         parent->max_children = parent->max_children + ceil((parent->max_children * 0.33)); // grow by 33%
         parent->children = realloc(parent->children, parent->max_children * sizeof(char *));
@@ -111,13 +107,13 @@ haml_node_t * haml_append_new_node(haml_node_t *parent, char *tag_name, char * i
 
 int haml_create_tag_node(char * haml_string) {
     if (haml_string[0] == '%') {
-        haml_node_t * parent    = haml_find_parent(last_created_node);
-        last_created_node       = haml_append_new_node(parent, haml_string, "","");
+        haml_node_t * parent    = haml_find_parent(haml_last_created_node);
+        haml_last_created_node       = haml_append_new_node(parent, haml_string, "","");
     } else if (haml_string[0] == '#' || haml_string[0] == '.') {
         char * id_is            = haml_extract_id_from_string(haml_string);
         char * classes_are      = haml_extract_classes_from_string(haml_string);
-        haml_node_t * parent    = haml_find_parent(last_created_node);
-        last_created_node       = haml_append_new_node(parent, "%div", id_is,classes_are);
+        haml_node_t * parent    = haml_find_parent(haml_last_created_node);
+        haml_last_created_node       = haml_append_new_node(parent, "%div", id_is,classes_are);
     }    // char * first_char = malloc(sizeof(char));
     return 0;
 }
@@ -184,15 +180,15 @@ char * haml_extract_classes_from_string(char * haml_string) {
 
 int haml_create_text_node(char * text) {
     haml_node_t *node;
-    node = haml_append_new_node(last_created_node, "", "", "");
+    node = haml_append_new_node(haml_last_created_node, "", "", "");
     node->text_contents = strdup(text);
     node->type = 1;
-    node->ws = last_created_node->ws + 2;
+    node->ws = haml_last_created_node->ws + 2;
     return 0;
 }
 
 int haml_set_whitespace(char * whitespace_string) {
-    current_whitespace_length = strlen(yytext);
+    haml_current_whitespace_length = strlen(yytext);
     return 0;
 }
 
@@ -200,7 +196,7 @@ haml_node_t * haml_find_parent(haml_node_t * current_node) {
     if (current_node->parent == 0) {
         return current_node;
     }
-    if (current_node->ws > current_whitespace_length - 2) {
+    if (current_node->ws > haml_current_whitespace_length - 2) {
         return haml_find_parent(current_node->parent);
     } else {
         return current_node;

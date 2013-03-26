@@ -1,1 +1,1 @@
-SUBDIRS = parson curmudgeon
+SUBDIRS = parson haml_lexer curmudgeon

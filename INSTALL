@@ -1,3 +1,7 @@
+DEPENDENCIES
+
+apt-get install libmysqlclient libmysqlclient-dev libpcre3 libpcre3-dev libtidy-0.99-0 libtidy-dev
+
 HOW TO COMPILE FROM A CLEAN GIT REPOSITORY
 
 aclocal

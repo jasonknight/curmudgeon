@@ -17,8 +17,12 @@
             printf("You have MYSQL errors: (%d) -- %s \n",a->last_errno,a->last_error); \
             return CUR_DB_ERROR; \
 
+            
+/** 
+* An enum. Describe what this enum is here
+*/
 enum cur_return_codes {
-    CUR_OK,
+    CUR_OK, /**< a way to document enumn members */
     CUR_CUR_ALLOC_FAILED,
     CUR_EVENTS_ALLOC_FAILED,
     CUR_CANNOT_FREE,
@@ -113,7 +117,7 @@ enum cur_adapters {
 /**
  * The Adapter is the connection to the database,
  * and also where we store results.
- * */
+ */
 struct adapter {
     short           connected;
     int             type;
