@@ -43,6 +43,20 @@ AC_ARG_WITH([mysql-lib-path],
   [MYSQL_LIBS='-lmysqlclient'])
 AC_SUBST([MYSQL_LIBS])
 
+
+# DOXYGEN STUFF
+
+AC_CHECK_PROGS([DOXYGEN], [doxygen])
+
+if test -z "$DOXYGEN";
+   then AC_MSG_WARN([Doxygen not found - continuing without Doxygen support])
+fi
+
+AM_CONDITIONAL([HAVE_DOXYGEN], 
+[test -n "$DOXYGEN"])AM_COND_IF([HAVE_DOXYGEN], [AC_CONFIG_FILES([docs/Doxyfile])])
+
+
+
 AC_CONFIG_FILES([Makefile                         \
                 src/Makefile                      \
                 src/parson/Makefile               \
@@ -55,4 +69,7 @@ AC_CONFIG_FILES([Makefile                         \
                 examples/regex/Makefile           \
                 examples/schema/Makefile          \
                 ])
+                
+                
+                
 AC_OUTPUT
