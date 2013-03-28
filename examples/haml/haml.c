@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "haml_lexer.h"
+#include "haml.h"
 
 
 

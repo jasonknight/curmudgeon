@@ -1,5 +1,5 @@
 
-#line 3 "haml_lexer.c"
+#line 3 "sass_lexer.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -471,13 +471,13 @@ int yy_flex_debug = 0;
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
-#line 1 "haml_lexer.l"
-#line 2 "haml_lexer.l"
-    #include "haml_lexer.h"
+#line 1 "sass_lexer.l"
+#line 2 "sass_lexer.l"
+    #include "sass_lexer.h"
     #include <math.h>
     #include <stdlib.h>
     #include <stdio.h>
-#line 481 "haml_lexer.c"
+#line 481 "sass_lexer.c"
 
 #define INITIAL 0
 
@@ -664,9 +664,9 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 8 "haml_lexer.l"
+#line 8 "sass_lexer.l"
 
-#line 670 "haml_lexer.c"
+#line 670 "sass_lexer.c"
 
 	if ( !(yy_init) )
 		{
@@ -751,23 +751,23 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 9 "haml_lexer.l"
+#line 9 "sass_lexer.l"
 { haml_set_whitespace(yytext); }
 	YY_BREAK
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 10 "haml_lexer.l"
+#line 10 "sass_lexer.l"
 { /*printf("NLS: %d\n",strlen(yytext)); */}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 11 "haml_lexer.l"
+#line 11 "sass_lexer.l"
 { haml_create_tag_node(strdup(yytext)); }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 12 "haml_lexer.l"
+#line 12 "sass_lexer.l"
 { haml_set_options(strdup(yytext)); }
 	YY_BREAK
 case 5:
@@ -775,7 +775,7 @@ case 5:
 (yy_c_buf_p) = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 13 "haml_lexer.l"
+#line 13 "sass_lexer.l"
 { haml_parse_directive(last_created_node,strdup(yytext)); }
 	YY_BREAK
 case 6:
@@ -783,20 +783,20 @@ case 6:
 (yy_c_buf_p) = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 14 "haml_lexer.l"
+#line 14 "sass_lexer.l"
 { haml_create_text_node(strdup(yytext)); }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 15 "haml_lexer.l"
+#line 15 "sass_lexer.l"
 { printf("unknown char %s\n",yytext);}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 16 "haml_lexer.l"
+#line 16 "sass_lexer.l"
 ECHO;
 	YY_BREAK
-#line 800 "haml_lexer.c"
+#line 800 "sass_lexer.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1794,7 +1794,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 16 "haml_lexer.l"
+#line 16 "sass_lexer.l"
 
 
 

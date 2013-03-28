@@ -1,5 +1,5 @@
 %{
-    #include "haml_lexer.h"
+    #include "sass.h"
     #include <math.h>
     #include <stdlib.h>
     #include <stdio.h>

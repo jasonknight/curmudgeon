@@ -77,13 +77,15 @@ prefix=/tmp/curmudgeon
 AC_CONFIG_FILES([Makefile                         \
                 src/Makefile                      \
                 src/parson/Makefile               \
-                src/haml_lexer/Makefile           \
+                src/haml/Makefile                 \
+                src/sass/Makefile                 \
                 src/curmudgeon/Makefile           \
                 doc/Makefile                      \
                 examples/Makefile                 \
                 examples/json/Makefile            \
                 examples/tidy/Makefile            \
-                examples/haml_lexer/Makefile      \
+                examples/haml/Makefile            \
+                examples/sass/Makefile            \
                 examples/options/Makefile         \
                 examples/regex/Makefile           \
                 examples/schema/Makefile          \
