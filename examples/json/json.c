@@ -18,7 +18,7 @@ int main(void) {
         cur_register_event(&app,"hello_world", 0,hello_world);
         cur_parse_request(test,&event);
 
-        db_mysql(app, &adptr, "localhost","root","root");
+        db_mysql(app, &adptr, "{ host: 'localhost', user: 'root', pass: 'root'}");
         db_connect( adptr );
         db_exec( adptr ,"CREATE DATABASE IF NOT EXISTS curmudgeon");
         db_select_db( adptr ,"curmudgeon");

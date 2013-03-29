@@ -204,8 +204,7 @@ void parson_array_free(PARSON_Array *array) {
 
 /* JSON Value */
 PARSON_Value * parson_value_init_object(void) {
-    PARSON_Value *new_value =
-(PARSON_Value*)parson_malloc(sizeof(PARSON_Value));
+    PARSON_Value *new_value = (PARSON_Value*)parson_malloc(sizeof(PARSON_Value));
     if (!new_value) { return NULL; }
     new_value->type = JSONObject;
     new_value->value.object = parson_object_init();
@@ -214,8 +213,7 @@ PARSON_Value * parson_value_init_object(void) {
 }
 
 PARSON_Value * parson_value_init_array(void) {
-    PARSON_Value *new_value =
-(PARSON_Value*)parson_malloc(sizeof(PARSON_Value));
+    PARSON_Value *new_value = (PARSON_Value*)parson_malloc(sizeof(PARSON_Value));
     if (!new_value) { return NULL; }
     new_value->type = JSONArray;
     new_value->value.array = parson_array_init();
@@ -224,8 +222,7 @@ PARSON_Value * parson_value_init_array(void) {
 }
 
 PARSON_Value * parson_value_init_string(char *string) {
-    PARSON_Value *new_value =
-(PARSON_Value*)parson_malloc(sizeof(PARSON_Value));
+    PARSON_Value *new_value = (PARSON_Value*)parson_malloc(sizeof(PARSON_Value));
     if (!new_value) { return NULL; }
     new_value->type = JSONString;
     new_value->value.string = string;
@@ -233,8 +230,7 @@ PARSON_Value * parson_value_init_string(char *string) {
 }
 
 PARSON_Value * parson_value_init_number(double number) {
-    PARSON_Value *new_value =
-(PARSON_Value*)parson_malloc(sizeof(PARSON_Value));
+    PARSON_Value *new_value = (PARSON_Value*)parson_malloc(sizeof(PARSON_Value));
     if (!new_value) { return NULL; }
     new_value->type = JSONNumber;
     new_value->value.number = number;
@@ -242,8 +238,7 @@ PARSON_Value * parson_value_init_number(double number) {
 }
 
 PARSON_Value * parson_value_init_boolean(int boolean) {
-    PARSON_Value *new_value =
-(PARSON_Value*)parson_malloc(sizeof(PARSON_Value));
+    PARSON_Value *new_value = (PARSON_Value*)parson_malloc(sizeof(PARSON_Value));
     if (!new_value) { return NULL; }
     new_value->type = JSONBoolean;
     new_value->value.boolean = boolean;
@@ -251,8 +246,7 @@ PARSON_Value * parson_value_init_boolean(int boolean) {
 }
 
 PARSON_Value * parson_value_init_null(void) {
-    PARSON_Value *new_value =
-(PARSON_Value*)parson_malloc(sizeof(PARSON_Value));
+    PARSON_Value *new_value = (PARSON_Value*)parson_malloc(sizeof(PARSON_Value));
     if (!new_value) { return NULL; }
     new_value->type = JSONNull;
     return new_value;
@@ -340,10 +334,12 @@ PARSON_Value * parse_value(char **string, size_t nesting) {
     skip_whitespaces(string);
     switch (**string) {
         case '{':
+            printf("JSON: Parsing Object Value\n");
             return parse_object_value(string, nesting + 1);
         case '[':
+            printf("Parsing Array Value\n");
             return parse_array_value(string, nesting + 1);
-        case '\"':
+        case '\"': case '\'':
             return parse_string_value(string);
         case 'f': case 't':
             return parse_boolean_value(string);

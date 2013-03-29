@@ -10,15 +10,16 @@
 #include <curmudgeon.h>
 
 /**
- * @brief Brief description of cur_init
- * @return describe what it returns
- * @param[out] dest The memory area to copy to.
- * @param[in] num_events Another attribute description
+ * @brief cur_init initializes the application data structues
+ * @return int CUR_OK, CUR_CUR_ALLOC_FAILED, CUR_EVENTS_ALLOC_FAILED
+ * @param[out] curmudgeon_t ** app
+ * @param[in] num_events How many events to pre-allocate
  * 
  * The cur acts as a kind of global store, it holds all
  * the events that are registered etc. You can to call
  * this function first, and pass a reference to a curmudgeon_t *
- * That's right, **. Just means a pointer to a point to a value.
+ * That's right, **. Just means a pointer to a pointer to a value.
+ *
  */
 int cur_init( curmudgeon_t ** dest, int num_events ) {
     curmudgeon_t * cur;
@@ -41,13 +42,15 @@ int cur_init( curmudgeon_t ** dest, int num_events ) {
 }
 
 /**
- * @brief Brief description of cur_done
+ * @brief cur_done frees up resources used by your application
  * @return describe what it returns
  * @param[out] to_free The memory area to copy to.
  * 
  * Really just to be good citizens. cur_done should only be called
  * before app exit. Just cleanup code. This should not be called
- * after each request!
+ * after each request! This will only free obvious data that
+ * curmudgeon allocated for long term use. This will not
+ * garbage collect.
  */
 int cur_done( curmudgeon_t ** to_free ) {
     curmudgeon_t * cur = *to_free;
@@ -63,8 +66,14 @@ int cur_done( curmudgeon_t ** to_free ) {
     }
     return CUR_OK;
 }
-
-int cur_free_adapter(adapter_t ** adptr /**< [in] another way to document function parameters */) {
+/**
+ * @brief Free adapter, releasing it's results and connections.
+ *
+ * adptr will be null after this point.
+ *
+ * @param[in] adapter_t ** adptr
+ * */
+int cur_free_adapter(adapter_t ** adptr) {
     adapter_t * a = *adptr;
     // If we are connected to the database, we
     // should close out that connection.
@@ -112,12 +121,19 @@ int cur_parse_request( const char * url, event_t ** dest ) {
     *dest = e;
     return CUR_OK;
 }
-// This just iterates over the registered "events" and then
-// runs their regexes against the event->full_url and if it
-// matches, it calls the handler. I don't know if we want
-// to all multiple handlers per url or just one? I think
-// just one is simpler and if you need more, you can just
-// call them yourself from a handler.
+/** 
+ * @brief call a callback_t based on an internal event
+ *
+ * @param curmudgeon_t * cur
+ * @param event_t ** event
+ *
+ * This just iterates over the registered "events" and then
+ * runs their regexes against the event->full_url and if it
+ * matches, it calls the handler. I don't know if we want
+ * to all multiple handlers per url or just one? I think
+ * just one is simpler and if you need more, you can just
+ * call them yourself from a handler.
+ */
 int cur_call_handler( curmudgeon_t * cur,event_t ** e_dest ) { 
     int i;
     registered_event_t ** events = cur->events;
@@ -131,12 +147,20 @@ int cur_call_handler( curmudgeon_t * cur,event_t ** e_dest ) {
     }
     return CUR_HANDLER_NOT_FOUND;
 }
-// Registering an event. pattern can be in two flavors:
-//    1) hello_world[\d]+
-//    2) /hello_world[\d]+/ims$j
-// That is we support perl/ruby style regex with /.../options
-// You'll need to look at the cur_regex function to see about the options
-// supported.
+/** 
+ * @brief Register an event callback
+ *
+ * @param curmudgeon_t ** dest where to store the event
+ * @param char * pattern Perl/POSIX style Regex
+ * @param int opts Any PCRE opts you want, read man pcreapi
+ * @param callback_t callback function pointer that accepts event_t **
+ * Registering an event. pattern can be in two flavors:
+ *    1) hello_world[\d]+
+ *    2) /hello_world[\d]+/ims$j 
+ * That is we support perl/ruby style regex with /.../options
+ * You'll need to look at the cur_regex function to see about the options
+ * supported.
+ */
 int cur_register_event( curmudgeon_t ** dest, char * pattern, int opts, callback_t callback ) {
     curmudgeon_t * cur = *dest;
     cur->events_length++;
@@ -156,8 +180,12 @@ int cur_list_events( curmudgeon_t ** cur ) {
     
     return CUR_OK;
 }
-// Actually executes the regex match, filling out any data
-// on the regex struct for later use.
+/**
+ * @brief Match a pre-compiled Regex Needle to a char * haystack
+ * 
+ * @param[in/out] regex_t ** precompiled regex_t
+ * @param[in] char * haystack
+ */
 int cur_match(regex_t ** reg_dest, char * haystack, ...) {
     va_list iargs;
     va_start(iargs,haystack);
@@ -181,11 +209,18 @@ int cur_match(regex_t ** reg_dest, char * haystack, ...) {
     }
     return rc;
 }
-// The grandaddy regex function. Lots of crazy shit is
-// going on here specific to interfacing with PCRE which
-// requires reading man pcreapi which has all the info
-// you would need. In reality it's a bit straightforward,
-// it's just an antiquated c api. 
+/** 
+ * @brief compile a regex_t to Perl/POSIX patter
+ *
+ * @param[out] regex_t ** that is NULL, it will be alloc'd for you
+ * @param[in] char * pattern to compile
+ *
+ * The grandaddy regex function. Lots of crazy shit is
+ * going on here specific to interfacing with PCRE which
+ * requires reading man pcreapi which has all the info
+ * you would need. In reality it's a bit straightforward,
+ * it's just an antiquated c api. 
+ */
 int cur_regex(regex_t ** re_dest,char * pattern) {
     char * errptr = malloc(sizeof(char) *1024);
     int erroffset;
@@ -321,27 +356,29 @@ int cur_free_regex(regex_t ** re_dest) {
     return CUR_OK;
 }
 
-// mysql stuff
-// So the idea is that even though we only support mysql, we should make it
-// easy to support more than one db. In some cases people will use
-// mysql for one db, and maybe some nosql piece of shit for a message
-// queue or some such. They should be able to use these simultaneously.
-//
-// I am not sure if this code is very re-entrant/thread safe, so we'll
-// have to think about that.
-//
-// curmudgeon_t * should probably have some form of mutex because the
-// result is store on that structure. otherwise, you need to pass
-// around and keep track of a lot of different values and
-// be freeing them yourself and we wouldn't be much of a
-// framework if we made the user do absolutely everything.
-int db_mysql( curmudgeon_t * cur,adapter_t ** adptr, char * host, char * user, char * pass) {
+/**
+ * @brief initialize adptr to MySQL.
+ * @param[out] adapter_t ** where to setup the data.
+ * */
+//int db_mysql( adapter_t ** adptr, char * host, char * user, char * pass) {
+int db_mysql( curmudgeon_t * cur, adapter_t ** adptr, char * options) {
+    cur_json_t * opts = cur_json_from_string(options);
     adapter_t * a = malloc(sizeof(adapter_t));
+    if ( ! cur_jsons(opts,"host") ) {
+        cur_jsons_set(opts,"host","localhost");
+    } 
+    if ( ! cur_jsons(opts,"port") ) {
+        cur_jsons_set(opts,"port","3306");
+    }
+    if ( ! cur_jsons(opts,"user") || ! cur_jsons(opts,"pass") ) {
+        printf("You must specify user and password, EVEN if one is blank\n");
+        assert( 1 == 0 );
+    }
     a->type = CUR_MYSQL;
-    a->user = user;
-    a->pass = pass;
-    a->host = host;
-    a->port = 3306;
+    a->user = cur_jsons(opts,"user");
+    a->pass = cur_jsons(opts,"pass");
+    a->host = cur_jsons(opts,"host");
+    a->port = atoi(cur_jsons(opts,"port"));
     a->myconn = mysql_init(NULL);
     a->schema = cur->schema;
     a->schema_version_file = cur->schema_version_file;

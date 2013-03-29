@@ -1846,9 +1846,7 @@ haml_node_t * haml_parse_file(char *name) {
         haml_last_created_node = haml_root_node;
     }
     yyin = myfile;
-    printf("calling yylex\n");
     yylex();
-    printf("yylex called\n");
     fclose(myfile);
     return haml_root_node;
 }

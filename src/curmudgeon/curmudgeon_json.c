@@ -224,6 +224,11 @@ cur_json_t * cur_json_object() {
 cur_json_t * cur_json_from_file(char * filename) {
     return _json_decode_file(filename);
 }
+
+cur_json_t * cur_json_from_string(char * json_string) {
+    return _json_decode(json_string);
+}
+
 cur_json_t * _json_decode(char *str) {
     PARSON_Value * root = parson_parse_string(str);
     if (! root ) {

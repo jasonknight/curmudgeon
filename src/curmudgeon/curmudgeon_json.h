@@ -14,6 +14,7 @@ cur_json_t *         cur_json_array();
 cur_json_t *         cur_json_string(char * str);
 cur_json_t *         cur_json_object();
 cur_json_t *         cur_json_from_file(char * filename);
+cur_json_t *         cur_json_from_string(char * json_string);
 cur_json_t *         _json_decode(char *str);
 cur_json_t *         _json_decode_file(char *str);
                 // Will take a key like: l1.l2.l3 and return l3

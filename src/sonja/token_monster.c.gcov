@@ -1,0 +1,255 @@
+        -:    0:Source:token_monster.c
+        -:    0:Graph:token_monster.gcno
+        -:    0:Data:token_monster.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1:#include "token_monster.h"
+        6:    2:int test_validator(char * stream, int * head, token_monster_t * token) {
+        6:    3:    int th = *head;
+        -:    4:   // printf("Hello from the validator next char is: %c!\n",stream[th + 1]);
+        6:    5:    return 1; 
+        -:    6:}
+        -:    7:
+        1:    8:void test_escape_callback(char * stream, int * head, int * buffer_index, char * buffer) {
+        1:    9:     buffer[*buffer_index] = '\\'; // allows us to maintain the escape sequence.
+        1:   10:     buffer[++(*buffer_index)] = stream[++(*head)];
+        -:   11:    //printf("hello from the escape callback");
+        1:   12:}
+        1:   13:void test_string_parsing() {
+        -:   14:    token_monster_dictionary_t * dicts[5];
+        -:   15:    int i;
+        1:   16:    for(i = -1; i < 5; dicts[++i] = NULL); // always remember to null!
+        -:   17:
+        1:   18:    token_monster_dictionary_t * dict = token_monster_create_dictionary("StringDoubleQuoted");
+        -:   19:
+        1:   20:    dict->alphabet = "";
+        1:   21:    dict->tigger = 0;
+        1:   22:    dict->starts_with = "\"";
+        1:   23:    dict->ends_with = "\"";
+        1:   24:    dict->terminator = '"';
+        -:   25:    
+        1:   26:    dicts[0] = dict;
+        -:   27:
+        1:   28:    token_monster_dictionary_t * dict2 = token_monster_create_dictionary("Ident");
+        -:   29:
+        1:   30:    dict2->alphabet = "abcdefghijklmnopqrstuvwxyz";
+        1:   31:    dict2->tigger = 1;
+        -:   32:
+        1:   33:    dicts[1] = dict2;
+        -:   34:
+        1:   35:    token_monster_t * root = token_monster_parse_file("./string-test.txt",dicts);
+        1:   36:    token_monster_t * token = root;
+        -:   37:    do {
+        4:   38:        token_monster_debug_token(token);
+        4:   39:    } while( (token = token->next) );
+        1:   40:}
+        -:   41:
+        1:   42:void test() {
+        1:   43:    token_monster_dictionary_t *dict = token_monster_create_dictionary("MyDict"); 
+        1:   44:    token_monster_debug_dictionary(dict);
+        1:   45:    assert( token_monster_dictionary_is_valid(dict) == 1);
+        -:   46:    
+        -:   47:    token_monster_dictionary_t * dicts[5];
+        -:   48:    int i;
+        1:   49:    for(i = -1; i < 5; dicts[++i] = NULL); // always remember to null!
+        1:   50:    dicts[0] = token_monster_create_dictionary("Testing");
+        1:   51:    dicts[0]->alphabet = "abcdefghijklmnopqrstuvwxyz";
+        1:   52:    dicts[0]->validator = test_validator;
+        1:   53:    char * teststring = "test: string";
+        1:   54:    token_monster_t * root = token_monster_parse_string(teststring,dicts);
+        1:   55:    dicts[0]->escape_character = '\\';
+        1:   56:    dicts[0]->escape_callback = test_escape_callback;
+        1:   57:    teststring = "char with i\\e escape";
+        1:   58:    token_monster_debug_dictionary(dicts[0]);
+        1:   59:    root = token_monster_parse_string(teststring,dicts);
+        1:   60:    token_monster_t * token = root;
+        -:   61:    do {
+        5:   62:        token_monster_debug_token(token);
+        5:   63:    } while( (token = token->next) );
+        -:   64:
+        1:   65:}
+        1:   66:int main() {
+        1:   67:    test();
+        1:   68:    printf("Now for something difficult\n"); 
+        1:   69:    test_string_parsing();
+        1:   70:    printf("\nAll tests passing\n");
+        -:   71:
+        1:   72:    return 0;
+        -:   73:}
+        -:   74:/**
+        -:   75: * @brief Create a blank dictionary, initializing members 
+        -:   76: *
+        -:   77: * @param[in] name
+        -:   78: * @return a dictionary
+        -:   79: * */
+        4:   80:token_monster_dictionary_t * token_monster_create_dictionary(char * name) {
+        4:   81:    token_monster_dictionary_t * dict = malloc(sizeof(token_monster_dictionary_t));
+        4:   82:    dict->name = name;
+        4:   83:    dict->alphabet = "";
+        4:   84:    dict->starts_with = "";
+        4:   85:    dict->ends_with = "";
+        4:   86:    dict->escape_character = '\0';
+        4:   87:    dict->tigger = 1;
+        4:   88:    dict->validator = NULL;
+        4:   89:    dict->escape_callback = NULL;
+        4:   90:    return dict;
+        -:   91:}
+        2:   92:void token_monster_debug_dictionary(token_monster_dictionary_t * dict) {
+        2:   93:    printf("<TokenMonsterDict name: %s, alph: [%s], sw: %s, ew: %s, esc: %c tig: %d>\n",dict->name,dict->alphabet,dict->starts_with,dict->ends_with,dict->escape_character,dict->tigger);
+        2:   94:}
+        -:   95:/**
+        -:   96: * @brief used internally to validate a dictionay*/
+        1:   97:int token_monster_dictionary_is_valid(token_monster_dictionary_t * dict) {
+        1:   98:    if (dict->alphabet) {
+        1:   99:        return 1;
+        -:  100:    } else {
+    #####:  101:        return 0;
+        -:  102:    }
+        -:  103:}
+        -:  104:
+        1:  105:token_monster_t * token_monster_parse_file(char * filename, token_monster_dictionary_t * dicts[]) {
+        -:  106:    char * file_contents;
+        -:  107:    FILE * fp;
+        -:  108:    struct stat info;
+        -:  109:    int bytes;
+        -:  110:    token_monster_t * root;
+        1:  111:    fp = fopen(filename,"r");
+        1:  112:    if ( ! fp ) {
+    #####:  113:        printf("TokenMonster: Could not open file %s\n",filename);
+        -:  114:    }
+        1:  115:    fstat(fileno(fp), &info);
+        1:  116:    bytes = sizeof(char) * (info.st_size + 1);
+        1:  117:    file_contents = malloc(bytes);
+        1:  118:    if ( ! file_contents ) {
+    #####:  119:        printf("could not allocate file_contents for %s\n",filename);
+        -:  120:    }
+        1:  121:    fread(file_contents, sizeof(char),info.st_size, fp);
+        1:  122:    fclose(fp);
+        1:  123:    root = token_monster_parse_string(file_contents,dicts);
+        1:  124:    return root;
+        -:  125:}
+        -:  126:/**
+        -:  127: * @brief takes a char * stream and a NULL terminated list of dicts and returns a doubly linked list of tokens
+        -:  128: * */
+        3:  129:token_monster_t * token_monster_parse_string(char * stream, token_monster_dictionary_t * dicts[]) {
+        -:  130:    char              current_character; // the current char from the stream;
+        3:  131:    int               number_of_matches = 0; // How many successful matches we have
+        3:  132:    short             just_started      = 0; // did we just start the dictionary match?
+        3:  133:    int               length            = strlen(stream);
+        3:  134:    int               head              = 0; // our position in the stream
+        -:  135:                                             // a  b  c  d
+        -:  136:                                             // 0  1  2  3 etc
+        3:  137:    int               j                 = 0;
+        3:  138:    int               bj                = 0; // buffer iterator for sub parsing
+        3:  139:    int               saved_head        = 0;
+        3:  140:    int               line              = 0;
+        3:  141:    token_monster_dictionary_t * cdict = NULL;
+        3:  142:    token_monster_t *            root_token = token_monster_create_token();
+        3:  143:                                 root_token->previous = NULL;
+        3:  144:                                 root_token->next     = NULL;
+        3:  145:                                 root_token->text = "__r00t__";
+        3:  146:    token_monster_t *            last_token = root_token;
+        3:  147:    char * buffer = malloc(sizeof(char) * 4000);
+        -:  148:    // We need to go char by char
+       26:  149:    while ( (current_character = stream[head]) ) {
+        -:  150:        //printf("[%c]",current_character);
+        -:  151:        // Record the line endings
+       20:  152:        if (strchr("\n\r",current_character)) {
+        1:  153:            line++;
+        -:  154:        }
+        -:  155:        // now we need to know if any of the dictionaries are interested?
+       20:  156:       j = -1;
+       69:  157:       while ( (cdict = dicts[++j]) ) {
+       29:  158:           just_started = 1;  
+       29:  159:           if ( token_monster_dict_is_interested(cdict,current_character) ) {
+        9:  160:                just_started = 0;
+        -:  161:                // This dict contains that char, so it's interested.
+        -:  162:                // now we need a buffer to put all characters in
+        -:  163:                // our buffer is 4kb, so if we go past 4k, we'll need to resize 
+        9:  164:                bj = 0;
+        9:  165:                buffer[bj] = current_character;
+        9:  166:                saved_head = head;
+        9:  167:                head++;
+       56:  168:                while ( (current_character = stream[head]) && token_monster_dict_matches(cdict,current_character) ) {
+       39:  169:                    bj++;
+       39:  170:                    if ( current_character != cdict->escape_character && current_character == cdict->terminator) {
+        1:  171:                        buffer[bj] = current_character;
+        1:  172:                        bj++;
+        1:  173:                        head++;
+        1:  174:                        break;
+        -:  175:                    }
+        -:  176:                    //printf(" -- %c %c -- \n",cdict->escape_character,current_character);
+       38:  177:                    if (current_character == cdict->escape_character) { 
+        1:  178:                        if (cdict->escape_callback) { 
+        1:  179:                            cdict->escape_callback(stream,&head,&bj,buffer); 
+        1:  180:                            continue;
+        -:  181:                        } else {
+        -:  182:                           // printf("No escape callback");
+    #####:  183:                            buffer[bj] = stream[++head];
+    #####:  184:                            continue;
+        -:  185:                        }
+        -:  186:                    }
+       37:  187:                    buffer[bj] = current_character;
+       37:  188:                    head++;
+        -:  189:                } // end buffer concat loop
+        -:  190:                // at this point, we've filled out buffer
+        -:  191:                // so we need to create a new token
+        9:  192:                token_monster_t * token = token_monster_create_token();
+        9:  193:                token->terminated_by = stream[head];
+        9:  194:                head--;
+        9:  195:                buffer[++bj] = '\0';
+        -:  196:                
+        9:  197:                token->text = strdup(buffer);
+        -:  198:                // Now we need to validate the token, if there is a validator
+        9:  199:                if (cdict->validator && !cdict->validator(stream,&head,token)) {
+    #####:  200:                    head = saved_head; 
+    #####:  201:                    buffer[0] = '\0';
+    #####:  202:                    free(token);
+    #####:  203:                    continue;
+        -:  204:                }
+        9:  205:                last_token->next = token;
+        9:  206:                token->previous = last_token;
+        9:  207:                token->start_column = saved_head;
+        9:  208:                token->end_column = head;
+        9:  209:                token->length = strlen(token->text);
+        9:  210:                token->line_number = line;
+        9:  211:                last_token = token;
+        9:  212:                buffer[0] = '\0';
+        -:  213:           } // dict was interested?
+        -:  214:       } // while cdict = dicts
+       20:  215:       head++; // DON'T FORGET TO INCREMENT!
+        -:  216:    } // end main while current_char
+        3:  217:    return root_token;
+        -:  218:}
+       12:  219:token_monster_t * token_monster_create_token() {
+       12:  220:    token_monster_t * token = malloc(sizeof(token_monster_t));
+       12:  221:    token->next = NULL;
+       12:  222:    token->previous = NULL;
+       12:  223:    return token;
+        -:  224:}
+       29:  225:int token_monster_dict_is_interested(token_monster_dictionary_t * dict, char c) {
+       29:  226:    if ( strlen(dict->starts_with) > 0) {
+        -:  227:        // The c must be in the begins_with set
+        9:  228:        if (strchr(dict->starts_with,c)) {
+        1:  229:            return 1 ;
+        -:  230:        } else {
+        8:  231:            return 0;
+        -:  232:        }
+        -:  233:    }
+        -:  234:    // We don't have a begins with, so let's see if it is in the alpha set
+       20:  235:    int is_in_set      = ( strchr(dict->alphabet,c) != NULL );
+       20:  236:    if (c == dict->escape_character) {
+    #####:  237:        is_in_set = 1;
+        -:  238:    }
+       20:  239:    return ( is_in_set == dict->tigger );
+        -:  240:}
+       45:  241:int token_monster_dict_matches(token_monster_dictionary_t * dict, char c) {
+       45:  242:    int is_in_set      = ( strchr(dict->alphabet,c) != NULL );
+       45:  243:    if (c == dict->escape_character) {
+        1:  244:        is_in_set = 1;
+        -:  245:    }
+       45:  246:    return ( is_in_set == dict->tigger );
+        -:  247:}
+        9:  248:void token_monster_debug_token(token_monster_t * token) {
+        9:  249:    printf("<Token text: [%s] terminated_by: [%c]>\n",token->text,token->terminated_by);
+        9:  250:}

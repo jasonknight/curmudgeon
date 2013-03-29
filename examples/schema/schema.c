@@ -12,7 +12,7 @@ int main(void) {
     if ( cur_init(&app,1) == CUR_OK) {
         app->schema_version_file = "schema.version"; 
         adapter_t * a = NULL;
-        db_mysql(app,&a,"localhost","root","root");
+        db_mysql(app,&a,"{ 'host': 'localhost', 'user': 'root', 'pass': 'root' }");
         db_connect( a );
         db_select_db( a ,"curmudgeon");
         printf("Schema version is: %d\n",_get_num_from_file(app->schema_version_file));

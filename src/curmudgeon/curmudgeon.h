@@ -152,7 +152,8 @@ struct db_col {
     int name_length;
 };
             // We need a pointer to the adapter to do the mallocs
-int         db_mysql( curmudgeon_t * cur,adapter_t **adptr, char *host, char *user, char *pass);
+//int         db_mysql( curmudgeon_t * cur,adapter_t **adptr, char *host, char *user, char *pass);
+int         db_mysql( curmudgeon_t *cur,adapter_t **adptr, char *options);
 int         db_connect( adapter_t * adptr );
 int         db_disconnect( adapter_t * adptr);
 int         db_exec( adapter_t * adptr, char *query );
