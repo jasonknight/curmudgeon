@@ -1,1 +1,1 @@
-SUBDIRS = json options regex schema haml_lexer tidy
+SUBDIRS = json options regex schema haml sass tidy

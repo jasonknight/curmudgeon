@@ -1,3 +1,0 @@
-How to compile
-
-flex haml_lexer.lex && gcc lex.yy.c -lm -lfl -o lex.bin

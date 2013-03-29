@@ -1,0 +1,27 @@
+$var: 15
+
+@include template2.sass
+
+p
+  :font-weight bold
+  :position absolute
+  span
+    :color blue
+    :width 10px
+    
+div.blue
+  :font-weight bold
+  :position absolute
+  #id.class
+    :color blue
+    :width 10px
+    a:hover
+      :color yellow
+    .blah
+      :color red
+  span, code
+    :color white
+    
+@mixin severe_error
+  :color red
+  :border 2px solid red

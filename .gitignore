@@ -39,4 +39,6 @@ doc/html
 doc/latex
 Doxyfile
 doxyfile.stamp
-
+src/haml/haml.c
+src/haml/sass.c
+.sass-cache

@@ -2,7 +2,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
-#include "haml_lexer.h"
+#include "haml.h"
 
 
 

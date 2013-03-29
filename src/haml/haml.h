@@ -1,5 +1,5 @@
-#ifndef HAML_LEXER_H
-#define HAML_LEXER_H
+#ifndef HAML_H
+#define HAML_H
 
 typedef struct haml_node haml_node_t;
 struct haml_node {
