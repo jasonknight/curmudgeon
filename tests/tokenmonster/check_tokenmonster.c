@@ -209,13 +209,13 @@ START_TEST(basic_parser) {
     ck_assert_int_eq(peter->memsize,0);
 }
 END_TEST
-int rule_callback(
+peter_parser_node_t * rule_callback(
     peter_parser_t * peter,
     token_monster_t * token, 
-    peter_parser_node_t ** node
+    peter_parser_node_t * node
 ) {
     
-    return 1;
+    return node;
 }
 START_TEST(parser_add_rule) {
     peter_parser_t * peter = token_monster_create_parser();
@@ -244,10 +244,12 @@ START_TEST(parser_execute_rule) {
     token_monster_add_rule(peter,JSONObject,rule_callback);
     token_monster_t * token = token_monster_create_token();
     peter_parser_node_t * node = token_monster_create_node();
-    int rc = token_monster_rule_for(peter,JSONObject,token,&node);
-    ck_assert_int_eq(rc,1);
-    rc = token_monster_rule_for(peter,99,token,&node);
-    ck_assert_int_eq(rc,-2);
+    ck_assert_int_eq(token_monster_has_rule_for(peter,JSONObject),1);
+    peter_parser_node_t * rc = token_monster_rule_for(peter,JSONObject,token,node);
+    fail_unless(rc != NULL,"Rule not found, when it should have been");
+    ck_assert_int_eq(token_monster_has_rule_for(peter,99),0);
+    rc = token_monster_rule_for(peter,99,token,node);
+    fail_unless(rc == NULL);
 }
 END_TEST
 

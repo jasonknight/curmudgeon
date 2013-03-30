@@ -371,10 +371,13 @@ peter_parser_t * token_monster_create_parser() {
     parser->memsize = 0;
     return parser;
 }
+/**
+ * @brief add a rule to the parser
+ * */
 int token_monster_add_rule(
     peter_parser_t * peter,
     int tag,
-    int (*rule)(peter_parser_t *, token_monster_t *,peter_parser_node_t **)
+    peter_parser_node_t * (*rule)(peter_parser_t *, token_monster_t *,peter_parser_node_t *)
 ) {
     int int_bytes,cb_bytes;
 
@@ -405,10 +408,13 @@ int token_monster_add_rule(
     peter->rules[peter->count]   = rule;
     return 0;
 }
-int  token_monster_rule_for(
+/*
+ * @brief executes a given rule
+ * */
+peter_parser_node_t *  token_monster_rule_for(
     peter_parser_t * peter,
     int tag,token_monster_t * token,
-    peter_parser_node_t **node
+    peter_parser_node_t *node
 ) {
     int i;
     for (i = 0; i <= peter->count; i++) {
@@ -416,7 +422,7 @@ int  token_monster_rule_for(
             return (*peter->rules[i])(peter,token,node);
         }
     }
-    return -2;
+    return NULL;
 }
 peter_parser_node_t * token_monster_create_node() {
     peter_parser_node_t * node = malloc(sizeof(peter_parser_node_t));
@@ -427,4 +433,13 @@ peter_parser_node_t * token_monster_create_node() {
     for (i = 0; i < node->capacity; node->children[i++] = NULL);
     node->parent = NULL;
     return node;
+}
+int token_monster_has_rule_for(peter_parser_t * peter,int tag) {
+    int i;
+    for (i = 0; i <= peter->count; i++) {
+        if ( peter->tags[i] == tag && ! peter->rules[i] == NULL) {
+            return 1;
+        }
+    }
+    return 0;
 }
