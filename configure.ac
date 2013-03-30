@@ -92,5 +92,6 @@ AC_CONFIG_FILES([Makefile                         \
                 ])
                 
                 
-                
+
+CC=clang
 AC_OUTPUT
