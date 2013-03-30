@@ -1,473 +1,114 @@
-Utf8 BOM
-[7b,{]
-	Braces int. 3 { 
-		Braces ctrl 3 {
-			 Braces !int [n]
-			 Braces ends_with [] n succ.
-			 Buffer is: {
-	 restore 3
-[6e,n]
-	B int. 4 n 
-		B ctrl 4 n
-			[65,e]
-			 B !int [w]
-			 B ends_with [eELl] w fail.
-	 restore 4
-	Id int. 4 n 
-		Id ctrl 4 n
-			[65,e]
-			[77,w]
-			 Id !int [:]
-			 Id ends_with [] : succ.
-			 Buffer is: new
-	 restore 4
-[65,e]
-	Id int. 5 e 
-		Id ctrl 5 e
-			[77,w]
-			 Id !int [:]
-			 Id ends_with [] : succ.
-			 Buffer is: ew
-	 restore 5
-[77,w]
-	Id int. 6 w 
-		Id ctrl 6 w
-			 Id !int [:]
-			 Id ends_with [] : succ.
-			 Buffer is: w
-	 restore 6
-[3a,:]
-	Pu int. 7 : 
-		Pu ctrl 7 :
-			 Pu !int [\s]
-			 Pu ends_with [] \s succ.
-			 Buffer is: :
-	 restore 7
-[20,\s]
-[22,"]
-	DQ int. 9 " 
-		DQ ctrl 9 "
-			[76,v]
-			[61,a]
-			[6c,l]
-			[75,u]
-			[65,e]
-			[22,"]
-			 DQ !int ["]
-			 DQ ends_with [] " succ.
-			 Buffer is: "value"
-	 restore 9
-[76,v]
-	Id int. 10 v 
-		Id ctrl 10 v
-			[61,a]
-			[6c,l]
-			[75,u]
-			[65,e]
-			[22,"]
-			 Id !int [,]
-			 Id ends_with [] , succ.
-			 Buffer is: value"
-	 restore 10
-[61,a]
-	Id int. 11 a 
-		Id ctrl 11 a
-			[6c,l]
-			[75,u]
-			[65,e]
-			[22,"]
-			 Id !int [,]
-			 Id ends_with [] , succ.
-			 Buffer is: alue"
-	 restore 11
-[6c,l]
-	Id int. 12 l 
-		Id ctrl 12 l
-			[75,u]
-			[65,e]
-			[22,"]
-			 Id !int [,]
-			 Id ends_with [] , succ.
-			 Buffer is: lue"
-	 restore 12
-[75,u]
-	Id int. 13 u 
-		Id ctrl 13 u
-			[65,e]
-			[22,"]
-			 Id !int [,]
-			 Id ends_with [] , succ.
-			 Buffer is: ue"
-	 restore 13
-[65,e]
-	Id int. 14 e 
-		Id ctrl 14 e
-			[22,"]
-			 Id !int [,]
-			 Id ends_with [] , succ.
-			 Buffer is: e"
-	 restore 14
-[22,"]
-	DQ int. 15 " 
-		DQ ctrl 15 "
-			[2c,,]
-			[74,t]
-			[6d,m]
-			[70,p]
-			[2e,.]
-			[73,s]
-			[74,t]
-			[72,r]
-			[69,i]
-			[6e,n]
-			[67,g]
-			[3a,:]
-			[20,\s]
-			[27,']
-			[61,a]
-			[6e,n]
-			[6f,o]
-			[74,t]
-			[68,h]
-			[65,e]
-			[72,r]
-			[20,\s]
-			[76,v]
-			[61,a]
-			[6c,l]
-			[75,u]
-			[65,e]
-			[27,']
-			[2c,,]
-			[20,\s]
-			[6d,m]
-			[61,a]
-			[72,r]
-			[67,g]
-			[69,i]
-			[6e,n]
-			[2d,-]
-			[74,t]
-			[6f,o]
-			[70,p]
-			[3a,:]
-			[20,\s]
-			[22,"]
-			 DQ !int ["]
-			 DQ ends_with [] " succ.
-			 Buffer is: ",tmp.string: 'another value', margin-top: "
-	 restore 15
-[2c,,]
-	Pu int. 16 , 
-		Pu ctrl 16 ,
-			 Pu !int [t]
-			 Pu ends_with [] t succ.
-			 Buffer is: ,
-	 restore 16
-[74,t]
-	B int. 17 t 
-		B ctrl 17 t
-			 B !int [m]
-			 B ends_with [eELl] m fail.
-	 restore 17
-	Id int. 17 t 
-		Id ctrl 17 t
-			[6d,m]
-			[70,p]
-			[2e,.]
-			[73,s]
-			[74,t]
-			[72,r]
-			[69,i]
-			[6e,n]
-			[67,g]
-			 Id !int [:]
-			 Id ends_with [] : succ.
-			 Buffer is: tmp.string
-	 restore 17
-[6d,m]
-	Id int. 18 m 
-		Id ctrl 18 m
-			[70,p]
-			[2e,.]
-			[73,s]
-			[74,t]
-			[72,r]
-			[69,i]
-			[6e,n]
-			[67,g]
-			 Id !int [:]
-			 Id ends_with [] : succ.
-			 Buffer is: mp.string
-	 restore 18
-[70,p]
-	Id int. 19 p 
-		Id ctrl 19 p
-			[2e,.]
-			[73,s]
-			[74,t]
-			[72,r]
-			[69,i]
-			[6e,n]
-			[67,g]
-			 Id !int [:]
-			 Id ends_with [] : succ.
-			 Buffer is: p.string
-	 restore 19
-[2e,.]
-[73,s]
-	Id int. 21 s 
-		Id ctrl 21 s
-			[74,t]
-			[72,r]
-			[69,i]
-			[6e,n]
-			[67,g]
-			 Id !int [:]
-			 Id ends_with [] : succ.
-			 Buffer is: string
-	 restore 21
-[74,t]
-	B int. 22 t 
-		B ctrl 22 t
-			[72,r]
-			 B !int [i]
-			 B ends_with [eELl] i fail.
-	 restore 22
-	Id int. 22 t 
-		Id ctrl 22 t
-			[72,r]
-			[69,i]
-			[6e,n]
-			[67,g]
-			 Id !int [:]
-			 Id ends_with [] : succ.
-			 Buffer is: tring
-	 restore 22
-[72,r]
-	Id int. 23 r 
-		Id ctrl 23 r
-			[69,i]
-			[6e,n]
-			[67,g]
-			 Id !int [:]
-			 Id ends_with [] : succ.
-			 Buffer is: ring
-	 restore 23
-[69,i]
-	Id int. 24 i 
-		Id ctrl 24 i
-			[6e,n]
-			[67,g]
-			 Id !int [:]
-			 Id ends_with [] : succ.
-			 Buffer is: ing
-	 restore 24
-[6e,n]
-	B int. 25 n 
-		B ctrl 25 n
-			 B !int [g]
-			 B ends_with [eELl] g fail.
-	 restore 25
-	Id int. 25 n 
-		Id ctrl 25 n
-			[67,g]
-			 Id !int [:]
-			 Id ends_with [] : succ.
-			 Buffer is: ng
-	 restore 25
-[67,g]
-	Id int. 26 g 
-		Id ctrl 26 g
-			 Id !int [:]
-			 Id ends_with [] : succ.
-			 Buffer is: g
-	 restore 26
-[3a,:]
-	Pu int. 27 : 
-		Pu ctrl 27 :
-			 Pu !int [\s]
-			 Pu ends_with [] \s succ.
-			 Buffer is: :
-	 restore 27
-[20,\s]
-[27,']
-	SQ int. 29 ' 
-		SQ ctrl 29 '
-			[61,a]
-			[6e,n]
-			[6f,o]
-			[74,t]
-			[68,h]
-			[65,e]
-			[72,r]
-			[20,\s]
-			[76,v]
-			[61,a]
-			[6c,l]
-			[75,u]
-			[65,e]
-			[27,']
-			 SQ !int [']
-			 SQ ends_with [] ' succ.
-			 Buffer is: 'another value'
-	 restore 29
-[61,a]
-	Id int. 30 a 
-		Id ctrl 30 a
-			[6e,n]
-			[6f,o]
-			[74,t]
-			[68,h]
-			[65,e]
-			[72,r]
-			 Id !int [\s]
-			 Id ends_with [] \s succ.
-			 Buffer is: another
-	 restore 30
-[6e,n]
-	B int. 31 n 
-		B ctrl 31 n
-			 B !int [o]
-			 B ends_with [eELl] o fail.
-	 restore 31
-	Id int. 31 n 
-		Id ctrl 31 n
-			[6f,o]
-			[74,t]
-			[68,h]
-			[65,e]
-			[72,r]
-			 Id !int [\s]
-			 Id ends_with [] \s succ.
-			 Buffer is: nother
-	 restore 31
-[6f,o]
-	Id int. 32 o 
-		Id ctrl 32 o
-			[74,t]
-			[68,h]
-			[65,e]
-			[72,r]
-			 Id !int [\s]
-			 Id ends_with [] \s succ.
-			 Buffer is: other
-	 restore 32
-[74,t]
-	B int. 33 t 
-		B ctrl 33 t
-			 B !int [h]
-			 B ends_with [eELl] h fail.
-	 restore 33
-	Id int. 33 t 
-		Id ctrl 33 t
-			[68,h]
-			[65,e]
-			[72,r]
-			 Id !int [\s]
-			 Id ends_with [] \s succ.
-			 Buffer is: ther
-	 restore 33
-[68,h]
-	Id int. 34 h 
-		Id ctrl 34 h
-			[65,e]
-			[72,r]
-			 Id !int [\s]
-			 Id ends_with [] \s succ.
-			 Buffer is: her
-	 restore 34
-[65,e]
-	Id int. 35 e 
-		Id ctrl 35 e
-			[72,r]
-			 Id !int [\s]
-			 Id ends_with [] \s succ.
-			 Buffer is: er
-	 restore 35
-[72,r]
-	Id int. 36 r 
-		Id ctrl 36 r
-			 Id !int [\s]
-			 Id ends_with [] \s succ.
-			 Buffer is: r
-	 restore 36
-[20,\s]
-[76,v]
-	Id int. 38 v 
-		Id ctrl 38 v
-			[61,a]
-			[6c,l]
-			[75,u]
-			[65,e]
-			[27,']
-			 Id !int [,]
-			 Id ends_with [] , succ.
-			 Buffer is: value'
-	 restore 38
-[61,a]
-	Id int. 39 a 
-		Id ctrl 39 a
-			[6c,l]
-			[75,u]
-			[65,e]
-			[27,']
-			 Id !int [,]
-			 Id ends_with [] , succ.
-			 Buffer is: alue'
-	 restore 39
-[6c,l]
-	Id int. 40 l 
-		Id ctrl 40 l
-			[75,u]
-			[65,e]
-			[27,']
-			 Id !int [,]
-			 Id ends_with [] , succ.
-			 Buffer is: lue'
-	 restore 40
-[75,u]
-	Id int. 41 u 
-		Id ctrl 41 u
-			[65,e]
-			[27,']
-			 Id !int [,]
-			 Id ends_with [] , succ.
-			 Buffer is: ue'
-	 restore 41
-[65,e]
-	Id int. 42 e 
-		Id ctrl 42 e
-			[27,']
-			 Id !int [,]
-			 Id ends_with [] , succ.
-			 Buffer is: e'
-	 restore 42
-[27,']
-	SQ int. 43 ' 
-		SQ ctrl 43 '
-			[2c,,]
-			[20,\s]
-			[6d,m]
-			[61,a]
-			[72,r]
-			[67,g]
-			[69,i]
-			[6e,n]
-			[2d,-]
-			[74,t]
-			[6f,o]
-			[70,p]
-			[3a,:]
-			[20,\s]
-			[22,"]
-			[31,1]
-			[70,p]
-			[78,x]
-			[22,"]
-			[20,\s]
-			[7d,}]
-			[a,\n]
-		SQ dne 67
+<TokenMonsterDict tag: [0] name: DQ, alph: [], sw: ", ew: , esc: \ tig: 0>
+<TokenMonsterDict tag: [0] name: SQ, alph: [], sw: ', ew: , esc:  tig: 0>
+<TokenMonsterDict tag: [1] name: N, alph: [+-0123456789.eEx], sw: +-0123456789, ew: , esc:  tig: 1>
+<TokenMonsterDict tag: [4] name: B, alph: [tTrRuUeEfFaAlLsSnNuU], sw: tTfFnN, ew: eELl, esc:  tig: 1>
+<TokenMonsterDict tag: [0] name: Id, alph: [
+ :,[]{}], sw: abcdefghijklmnopqrstuvwzyz_, ew: , esc:  tig: 0>
+<TokenMonsterDict tag: [0] name: Pu, alph: [,:], sw: , ew: , esc:  tig: 1>
+		 - tagging as object.
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+		 - tagging as array.
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+jumping
+	<Token text: [_r00t_] tag: [0] terminated_by: []>
+	<Token text: [{] tag: [2] terminated_by: [\s]>
+	<Token text: [new] tag: [0] terminated_by: [\s]>
+	<Token text: [:] tag: [0] terminated_by: [\s]>
+	<Token text: ["value"] tag: [0] terminated_by: ["]>
+	<Token text: [,] tag: [0] terminated_by: [/]>
+	<Token text: [right] tag: [0] terminated_by: [:]>
+	<Token text: [:] tag: [0] terminated_by: [n]>
+	<Token text: [next] tag: [0] terminated_by: [,]>
+	<Token text: [,] tag: [0] terminated_by: [\n]>
+	<Token text: [tmp.string] tag: [0] terminated_by: [:]>
+	<Token text: [:] tag: [0] terminated_by: [\s]>
+	<Token text: ['another value'] tag: [0] terminated_by: [']>
+	<Token text: [,] tag: [0] terminated_by: [\n]>
+	<Token text: ["is_true"] tag: [0] terminated_by: ["]>
+	<Token text: [:] tag: [0] terminated_by: [\s]>
+	<Token text: [true] tag: [4] terminated_by: [,]>
+	<Token text: [,] tag: [0] terminated_by: [\n]>
+	<Token text: [is_null] tag: [0] terminated_by: [:]>
+	<Token text: [:] tag: [0] terminated_by: [\s]>
+	<Token text: [null] tag: [4] terminated_by: [,]>
+	<Token text: [,] tag: [0] terminated_by: [\n]>
+	<Token text: [is_false] tag: [0] terminated_by: [:]>
+	<Token text: [:] tag: [0] terminated_by: [\s]>
+	<Token text: [false] tag: [4] terminated_by: [,]>
+	<Token text: [,] tag: [0] terminated_by: [\n]>
+	<Token text: [margin-top] tag: [0] terminated_by: [:]>
+	<Token text: [:] tag: [0] terminated_by: [\s]>
+	<Token text: ["1px"] tag: [0] terminated_by: ["]>
+	<Token text: [,] tag: [0] terminated_by: [\n]>
+	<Token text: ["金鑰"] tag: [0] terminated_by: ["]>
+	<Token text: [:] tag: [0] terminated_by: [\s]>
+	<Token text: [1] tag: [1] terminated_by: [,]>
+	<Token text: [,] tag: [0] terminated_by: [\n]>
+	<Token text: ['anarray'] tag: [0] terminated_by: [']>
+	<Token text: [:] tag: [0] terminated_by: [\s]>
+	<Token text: [[] tag: [3] terminated_by: [\n]>
+	<Token text: [123] tag: [1] terminated_by: [,]>
+	<Token text: [,] tag: [0] terminated_by: [\n]>
+	<Token text: [5.5] tag: [1] terminated_by: [,]>
+	<Token text: [,] tag: [0] terminated_by: [\n]>
+	<Token text: [0x50] tag: [1] terminated_by: [,]>
+	<Token text: [,] tag: [0] terminated_by: [\n]>
+	<Token text: ['str'] tag: [0] terminated_by: [']>
+	<Token text: [,] tag: [0] terminated_by: [\n]>
+	<Token text: ["dbl str"] tag: [0] terminated_by: ["]>
+	<Token text: [,] tag: [0] terminated_by: [\n]>
+	<Token text: ['テスト'] tag: [0] terminated_by: [']>
+	<Token text: [,] tag: [0] terminated_by: [\n]>
+	<Token text: ["測試"] tag: [0] terminated_by: ["]>
+	<Token text: []] tag: [0] terminated_by: [\n]>
+	<Token text: [}] tag: [0] terminated_by: [\n]>
 
 All tests passing

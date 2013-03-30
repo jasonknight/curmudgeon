@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+int g_token_monster_dbg_level;
 typedef struct token_monster_s token_monster_t;
 typedef struct token_monster_dictionary_s token_monster_dictionary_t;
 typedef int (*token_monster_callback_t)(token_monster_dictionary_t * dict, char * stream, int * head,token_monster_t * token);
@@ -25,7 +26,7 @@ struct token_monster_s {
     int         length;
     int         line_number;
     char        terminated_by;
-    short       tag; // something you can tag the token with
+    int         tag; // something you can tag the token with
     token_monster_t * previous;
     token_monster_t * next;
 };
@@ -40,6 +41,7 @@ struct token_monster_dictionary_s {
     int         limit; // i.e. we could match a lot of character, so don't be greedy, match only
                        // what is necessary and move on
     int         min;
+    int         tag; // will be transferred to the token
     token_monster_callback_t validator;
     token_monster_escape_callback_t escape_callback;
 };  
@@ -47,9 +49,22 @@ token_monster_dictionary_t *    token_monster_create_dictionary(char * name);
 void                            token_monster_debug_dictionary(token_monster_dictionary_t * dict);
 int                             token_monster_dictionary_is_valid(token_monster_dictionary_t * dict);
 token_monster_t *               token_monster_create_token();
-token_monster_t *               token_monster_parse_string(char * stream, token_monster_dictionary_t * dicts[]);
-token_monster_t *               token_monster_subparse_string(char * stream, int * cpos,token_monster_dictionary_t * cdict,token_monster_t * root);
-token_monster_t *               token_monster_parse_file(char * filename, token_monster_dictionary_t * dicts[]);
+token_monster_t *               token_monster_parse_string(
+                                    char * stream, 
+                                    token_monster_dictionary_t * dicts[],
+                                    char * cmnt_start,
+                                    char * cmnt_end
+                                );
+token_monster_t *               token_monster_subparse_string(
+                                    char * stream, 
+                                    int * cpos,token_monster_dictionary_t * cdict,
+                                    token_monster_t * root
+                                );
+token_monster_t *               token_monster_parse_file(
+                                    char * filename, 
+                                    token_monster_dictionary_t * dicts[],
+                                    char * cmnt_start,
+                                    char * cmnt_end);
 int                             token_monster_dict_is_interested(token_monster_dictionary_t * dict, char c);
 int                             token_monster_dict_matches(token_monster_dictionary_t * dict, char c);
 void                            token_monster_debug_token(token_monster_t * token);
@@ -59,7 +74,7 @@ void                            token_monster_debug_token(token_monster_t * toke
  * Now we get into code that helps you to create a parser. This is a simple LL(n) style parser. Though
  * theoretically you could alter it in almost any way imaginable.
  *
- * With a parse, you have this basic idea of Nodes that have children. You go along a string
+ * With a parser, you have this basic idea of Nodes that have children. You go along a string
  * of tokens from left to right (A doubly linked list etc), and considering the "tag" of the
  * token, and perhaps the tag of the preceding, or following token, you make some kind of
  * decision about where it belongs in the "tree".
@@ -68,6 +83,16 @@ void                            token_monster_debug_token(token_monster_t * toke
  *
  * Given a set of tags and callbacks, loop over all tokens found and if a token is found
  * with an "interesting" tag, pass it and a "current" node to the callback.
+ *
+ * Lexing should actually produce a lot of irrelevant tags that are only useful
+ * for validating that the input is well formed, and only rarely do they add
+ * semantic value.
+ *
+ * For instance, if we are parsing JSON, then we are interested in {,[ and :
+ * tokens. Everything else, we either ignore, or simply append as a "value"
+ * to the current node. 
+ *
+ *
  * */
 typedef struct peter_parser_s peter_parser_t;
 typedef struct peter_parser_node_s peter_parser_node_t;
@@ -93,11 +118,4 @@ struct peter_parser_node_s {
 peter_parser_t *        token_monster_create_parser(int num_rules);
 peter_parser_node_t *   token_monster_create_node();
 char *    token_monster_printable(char c);
-void printucz(unsigned char * buf,int len) {
-   int i = 0;
-   while (i <= len) {
-    printf("%u ",buf[i]);
-    i++;
-   }
-}
 #endif
