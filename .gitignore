@@ -40,5 +40,7 @@ doc/latex
 Doxyfile
 doxyfile.stamp
 src/haml/haml.c
+src/haml/haml_lexer.c
 src/haml/sass.c
+src/haml/sass_lexer.c
 .sass-cache
