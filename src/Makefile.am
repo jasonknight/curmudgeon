@@ -1,1 +1,1 @@
-SUBDIRS = parson haml sass curmudgeon
+SUBDIRS = tokenmonster haml sass

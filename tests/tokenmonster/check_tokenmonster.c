@@ -1,4 +1,6 @@
-﻿#include "token_monster.h"
+﻿#include "tokenmonster.h"
+#include <check.h>
+#include <stdlib.h>
 enum Tags {
     JSONString,
     JSONNumber,
@@ -46,14 +48,7 @@ void test_string_parsing() {
     token_monster_t * root = token_monster_parse_file("./string-test.txt",dicts,NULL,NULL);
     token_monster_t * token = root;
     
-    // Create the parser
-    peter_parser_t * parser = token_monster_create_parser(2);
-    parser->tags[0] = 0;
-    parser->rules[0] = parser_test_callback;
-    parser->tags[1] = 1;
-    parser->rules[1] = parser_test_callback;
-    peter_parser_node_t * current_node = token_monster_create_node();
-
+    
     do {
         token_monster_debug_token(token);
         // This looks all crazy, but it's just an array of 
@@ -86,7 +81,7 @@ int test_object_validator(token_monster_dictionary_t * dict, char * stream, int 
     }
     return 1;
 }
-void test_json_lexing() {
+START_TEST(test_json_lexing) {
     int i;
     // We will need dictionaries for:
     // 1 Braces {}[]
@@ -154,14 +149,34 @@ void test_json_lexing() {
 
     //g_token_monster_dbg_level = 1;
     token_monster_t * root = token_monster_parse_file("./json-test.js",dicts,"/*","*/");
-    token_monster_t * token = root;
+    token_monster_t * token = root->next->next;
+    ck_assert_str_eq(token->text,"test");
+    token = token->next->next; // skip the colon
+    ck_assert_str_eq(token->text,"true");
+    ck_assert_int_eq(token->tag,JSONBoolean);
+    token = token->next->next;
+    ck_assert_str_eq(token->text,"test2");
+    token = token->next->next;
+    ck_assert_int_eq(token->tag,JSONBoolean);
+    token = token->next->next;
+    ck_assert_str_eq(token->text,"test3");
+    token = token->next->next;
+    ck_assert_int_eq(token->tag,JSONNull);
+    token = token->next->next;
+    ck_assert_str_eq(token->text,"test4");
+    token = token->next->next;
+    ck_assert_int_eq(token->tag,JSONNumber);
+    token = token->next->next->next->next;
+    ck_assert_int_eq(token->tag,JSONString);
 
-    do {
-       token_monster_debug_token(token);
-    } while( (token = token->next) );    
+   // do {
+   //    token_monster_debug_token(token);
+   //    fflush(stdout);
+   // } while( (token = token->next) );    
 }
+END_TEST
 
-void test() {
+START_TEST(basic_test) {
     token_monster_dictionary_t *dict = token_monster_create_dictionary("MyDict"); 
     token_monster_debug_dictionary(dict);
     assert( token_monster_dictionary_is_valid(dict) == 1);
@@ -174,26 +189,97 @@ void test() {
     dicts[0]->validator = test_validator;
     char * teststring = "test: string";
     token_monster_t * root = token_monster_parse_string(teststring,dicts,NULL,NULL);
+    fail_unless( (strcmp(root->next->text,"test") == 0), "Expected test as token value");
     dicts[0]->escape_character = '\\';
     dicts[0]->escape_callback = test_escape_callback;
     teststring = "char with i\\e escape";
     token_monster_debug_dictionary(dicts[0]);
     root = token_monster_parse_string(teststring,dicts,NULL,NULL);
-    token_monster_t * token = root;
+    fail_unless( (root != NULL), "root is null!");
+    fail_unless( (strcmp(root->text,"_r00t_") == 0 ), "root misnamed");
+    fail_unless( (root->next != NULL), "No second token");
+    ck_assert_str_eq(root->next->next->text,"with");
+    fail_unless( (strcmp(root->next->next->text,"with") == 0), "Expected with as token value");
+}
+END_TEST
+START_TEST(basic_parser) {
+    peter_parser_t * peter = token_monster_create_parser();
+    ck_assert_int_eq(peter->count,-1);
+    ck_assert_int_eq(peter->capacity,0);
+    ck_assert_int_eq(peter->memsize,0);
+}
+END_TEST
+int rule_callback(
+    peter_parser_t * peter,
+    token_monster_t * token, 
+    peter_parser_node_t ** node
+) {
+    
+    return 1;
+}
+START_TEST(parser_add_rule) {
+    peter_parser_t * peter = token_monster_create_parser();
+    token_monster_add_rule(peter,JSONObject,rule_callback);
+    ck_assert_int_eq(peter->count,0);
+    ck_assert_int_eq(peter->capacity,5);
+    ck_assert_int_eq(peter->tags[0],JSONObject);
+}
+END_TEST
+START_TEST(parser_add_many_rules) {
+    peter_parser_t * peter = token_monster_create_parser();
+    int i;
+    for (i = 0; i < 8; i++) {
+        token_monster_add_rule(peter,i,rule_callback);
+    }
+    int ib,cb;
+    ib = sizeof(int) * 10;
+    cb = sizeof(void *) * 10;
+    ck_assert_int_eq(peter->memsize,ib+cb);
+    ck_assert_int_eq(peter->count,7);
+    ck_assert_int_eq(peter->tags[7],i-1);
+}
+END_TEST
+START_TEST(parser_execute_rule) {
+    peter_parser_t * peter = token_monster_create_parser();
+    token_monster_add_rule(peter,JSONObject,rule_callback);
+    token_monster_t * token = token_monster_create_token();
+    peter_parser_node_t * node = token_monster_create_node();
+    int rc = token_monster_rule_for(peter,JSONObject,token,&node);
+    ck_assert_int_eq(rc,1);
+    rc = token_monster_rule_for(peter,99,token,&node);
+    ck_assert_int_eq(rc,-2);
+}
+END_TEST
 
-        do {
-            token_monster_debug_token(token);
-        } while( (token = token->next) );
 
+
+Suite * create_token_monster_suite(void) {
+    Suite * s       = suite_create("Token Monster");
+    TCase * tc      = tcase_create("Basic Parsing");
+    tcase_add_test(tc,basic_test);
+    tcase_add_test(tc,test_json_lexing);
+    tcase_add_test(tc,basic_parser);
+    tcase_add_test(tc,parser_add_rule);
+    tcase_add_test(tc,parser_add_many_rules);
+    tcase_add_test(tc,parser_execute_rule);
+    suite_add_tcase(s,tc);
+    return s;
 }
 int main() {
+    int number_failed;
     g_token_monster_dbg_level =  0;
+    Suite * s = create_token_monster_suite();
+    SRunner *sr = srunner_create(s);
+    srunner_run_all(sr,CK_NORMAL);
+    number_failed = srunner_ntests_failed(sr);
+    srunner_free(sr);
+    return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
     //test();
     //printf("Now for something difficult\n"); 
     //test_string_parsing();
     //printf("Testing complex JSON Parsing\n");
-    test_json_lexing();
-    printf("\nAll tests passing\n");
+    //test_json_lexing();
+    //printf("\nAll tests passing\n");
 
     return 0;
 }
