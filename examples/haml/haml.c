@@ -7,8 +7,9 @@
 
 
 int main(void) {
-    char * templatepath = "./templates/template.haml";
+    char * templatepath = "examples/haml/templates/template.haml";
     printf("%s\n\n", templatepath);
     haml_node_t * haml_root_node = haml_parse_file(templatepath); 
+    print_tree(haml_root_node);
     printf("%s\n", haml_node_as_xml(haml_root_node,1));
 }

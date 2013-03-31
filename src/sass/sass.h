@@ -17,21 +17,23 @@ struct sass_node {
 };
 
 struct sass_attr {
-    char           *attr_name;
-    char           *attr_value;
+    char           *key;
+    char           *val;
 };
 
 sass_node_t    *sass_parse_file(char *name);
 sass_node_t    *sass_init_node(char *selector_name, int ws);
 sass_node_t    *sass_find_parent(sass_node_t * current_node);
 sass_node_t    *sass_append_new_node(sass_node_t *parent, char *selector_name);
-int             sass_create_tag_node(char * sass_string);
-int             print_tree(sass_node_t *current_node, int recursion_depth);
+int             sass_append_new_attr(char *attr_string);
+int             sass_create_tag_node(char *sass_string);
+int             sass_print_tree(sass_node_t *current_node, int recursion_depth);
+char           *sass_append_string_with_newline(char *spaces, char *s1, char *s2);
 
 // File-global variables
-static sass_node_t *root_node;
-static sass_node_t *last_created_node;
-static sass_node_t *last_created_node_indented;
-static int          current_whitespace_length;
+static sass_node_t *sass_root_node;
+static sass_node_t *sass_last_created_node;
+static sass_node_t *sass_last_created_node_indented;
+static int          sass_current_whitespace_length;
 
 #endif
