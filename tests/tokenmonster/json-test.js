@@ -1,4 +1,8 @@
 ﻿{ 
+    test: true,
+    test2: false,
+    test3: null,
+    test4: 1.5,
     new  : "value",/* Example comment */right:next,
     tmp.string: 
         'another value',

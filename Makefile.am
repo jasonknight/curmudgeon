@@ -1,3 +1,3 @@
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = src examples doc
+SUBDIRS = src examples doc tests

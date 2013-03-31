@@ -1,0 +1,5 @@
+﻿TESTS = check_tokenmonster
+check_PROGRAMS = check_tokenmonster
+check_tokenmonster_SOURCES = check_tokenmonster.c $(top_builddir)/src/tokenmonster/tokenmonster.h
+check_tokenmonster_CFLAGS = @CHECK_CFLAGS@
+check_tokenmonster_LDADD = $(top_builddir)/src/tokenmonster/libtokenmonster.la @CHECK_LIBS@

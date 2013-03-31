@@ -1,4 +1,4 @@
-#include "token_monster.h"
+#include "tokenmonster.h"
 /**
  * @brief Create a blank dictionary, initializing members 
  *
@@ -364,15 +364,65 @@ void token_monster_debug_token(token_monster_t * token) {
 /**
  * @brief creates and initializes a parser to which we can add rules
  * @param[in] number of rules to prealloc*/
-peter_parser_t * token_monster_create_parser(int num_rules) {
-    int tag_bytes = sizeof(short) * num_rules;
-    int i;
+peter_parser_t * token_monster_create_parser() {
     peter_parser_t * parser = malloc(sizeof(peter_parser_t));
-    parser->tags = malloc(tag_bytes);
-    parser->rules = malloc(sizeof(void *) * num_rules + 1);
-    parser->count = 0;
-    parser->capacity = num_rules;
+    parser->count = -1;
+    parser->capacity = 0;
+    parser->memsize = 0;
     return parser;
+}
+/**
+ * @brief add a rule to the parser
+ * */
+int token_monster_add_rule(
+    peter_parser_t * peter,
+    int tag,
+    peter_parser_node_t * (*rule)(peter_parser_t *, token_monster_t *,peter_parser_node_t *)
+) {
+    int int_bytes,cb_bytes;
+
+    if (peter->count == -1) {
+        int_bytes = sizeof(int) * 5;
+        cb_bytes = sizeof(void *) * 5;
+        peter->rules = malloc(cb_bytes);
+        if (!peter->rules)
+            return -1;
+        peter->tags = malloc(int_bytes);
+        if (!peter->tags)
+            return -2;
+        peter->capacity = 5;
+        peter->memsize = cb_bytes + int_bytes;
+    } else if (peter->count == peter->capacity - 1) {
+        peter->capacity += 5;
+        int_bytes = sizeof(int) * peter->capacity;
+        cb_bytes = sizeof(void *) * peter->capacity;
+        peter->rules = realloc(peter->rules,cb_bytes);
+        if (!peter->rules)
+            return -1;
+        peter->tags = realloc(peter->tags,int_bytes);
+        if (!peter->tags)
+            return -2;
+        peter->memsize = int_bytes + cb_bytes;
+    }
+    peter->tags[++peter->count] = tag;
+    peter->rules[peter->count]   = rule;
+    return 0;
+}
+/*
+ * @brief executes a given rule
+ * */
+peter_parser_node_t *  token_monster_rule_for(
+    peter_parser_t * peter,
+    int tag,token_monster_t * token,
+    peter_parser_node_t *node
+) {
+    int i;
+    for (i = 0; i <= peter->count; i++) {
+        if ( peter->tags[i] == tag && ! peter->rules[i] == NULL) {
+            return (*peter->rules[i])(peter,token,node);
+        }
+    }
+    return NULL;
 }
 peter_parser_node_t * token_monster_create_node() {
     peter_parser_node_t * node = malloc(sizeof(peter_parser_node_t));
@@ -383,4 +433,13 @@ peter_parser_node_t * token_monster_create_node() {
     for (i = 0; i < node->capacity; node->children[i++] = NULL);
     node->parent = NULL;
     return node;
+}
+int token_monster_has_rule_for(peter_parser_t * peter,int tag) {
+    int i;
+    for (i = 0; i <= peter->count; i++) {
+        if ( peter->tags[i] == tag && ! peter->rules[i] == NULL) {
+            return 1;
+        }
+    }
+    return 0;
 }

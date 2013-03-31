@@ -102,11 +102,12 @@ typedef struct peter_parser_node_s peter_parser_node_t;
  * the entire parsing process.
  * */
 struct peter_parser_s {
-    short * tags; // tags we are interested in, they should match the corresponding rule
+    int * tags; // tags we are interested in, they should match the corresponding rule
                    // in the rules list, 0 -> 0, 1 -> 1 etc 
-    int (**rules)(peter_parser_t *,token_monster_t *,peter_parser_node_t **); // the index of the tags should match the index of the rules 
+    peter_parser_node_t * (**rules)(peter_parser_t *,token_monster_t *,peter_parser_node_t *); // the index of the tags should match the index of the rules 
     int count; // will be inialized to -1
     int capacity;
+    int memsize;
 };
 struct peter_parser_node_s {
     token_monster_t * token; // we already have a lot of info here.
@@ -115,7 +116,18 @@ struct peter_parser_node_s {
     peter_parser_node_t ** children;
     peter_parser_node_t * parent;
 };
-peter_parser_t *        token_monster_create_parser(int num_rules);
+peter_parser_t *        token_monster_create_parser();
+int                     token_monster_add_rule(
+                            peter_parser_t * peter, 
+                            int tag, 
+                            peter_parser_node_t * (*rule)(peter_parser_t *,token_monster_t *, peter_parser_node_t *)
+                        );
 peter_parser_node_t *   token_monster_create_node();
 char *    token_monster_printable(char c);
+peter_parser_node_t *  token_monster_rule_for(
+    peter_parser_t * peter,
+    int tag,token_monster_t * token,
+    peter_parser_node_t *node
+);
+int token_monster_has_rule_for(peter_parser_t * peter,int tag);
 #endif

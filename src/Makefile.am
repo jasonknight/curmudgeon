@@ -1,1 +1,1 @@
-SUBDIRS = parson haml sauce curmudgeon
+SUBDIRS = tokenmonster haml sauce

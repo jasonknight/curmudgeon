@@ -28,7 +28,7 @@ AM_PROG_LIBTOOL
 AM_PROG_LEX
 
 PKG_CHECK_MODULES([LIBPCRE], [libpcre])
-
+PKG_CHECK_MODULES([CHECK], [check >= 0.8.0])
 # MF: Get MySQL library and include locations
 AC_ARG_WITH([mysql-include-path],
   [AS_HELP_STRING([--with-mysql-include-path],
@@ -70,16 +70,14 @@ fi
 AM_CONDITIONAL([HAVE_DOXYGEN], 
 [test -n "$DOXYGEN"])AM_COND_IF([HAVE_DOXYGEN], [AC_CONFIG_FILES([doc/Doxyfile])])
 
-
 prefix=/tmp/curmudgeon
 
 
 AC_CONFIG_FILES([Makefile                         \
                 src/Makefile                      \
-                src/parson/Makefile               \
                 src/haml/Makefile                 \
-                src/sauce/Makefile                 \
-                src/curmudgeon/Makefile           \
+                src/sauce/Makefile                \
+                src/tokenmonster/Makefile         \
                 doc/Makefile                      \
                 examples/Makefile                 \
                 examples/json/Makefile            \
@@ -89,9 +87,8 @@ AC_CONFIG_FILES([Makefile                         \
                 examples/options/Makefile         \
                 examples/regex/Makefile           \
                 examples/schema/Makefile          \
+                tests/Makefile                    \
+                tests/tokenmonster/Makefile       \
                 ])
-                
-                
-
 CC=clang
 AC_OUTPUT
