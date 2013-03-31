@@ -78,7 +78,7 @@ AC_CONFIG_FILES([Makefile                         \
                 src/Makefile                      \
                 src/parson/Makefile               \
                 src/haml/Makefile                 \
-                src/sass/Makefile                 \
+                src/sauce/Makefile                 \
                 src/curmudgeon/Makefile           \
                 doc/Makefile                      \
                 examples/Makefile                 \
