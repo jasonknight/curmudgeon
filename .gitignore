@@ -41,6 +41,6 @@ Doxyfile
 doxyfile.stamp
 src/haml/haml.c
 src/haml/haml_lexer.c
-src/haml/sass.c
-src/haml/sass_lexer.c
+src/sass/sass.c
+src/sass/sass_lexer.c
 .sass-cache

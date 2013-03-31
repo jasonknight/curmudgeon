@@ -5,14 +5,15 @@
     #include "sass.h"
 %}
 %pointer
-%%  
-[ \t]                       { sass_set_whitespace(yytext);}
+%%
+^[ \t]*$                     { /* ignoring empty line */ }
+[ \t]*                       { sass_set_whitespace(yytext);}
 [\r\n\f]+                    { /* we ignore those */ }
 :.*                          { sass_append_new_attr(strdup(yytext)); }
 $.*                          { /*printf("VAR          %s\n",yytext);*/ }
 @.*                          { /*printf("DIRECTIVE    %s\n",yytext);*/ }
 [#\.].*                      { /*printf("ATTR_NODE    %s\n",yytext);*/ }
-[^ \t\r\n\f\:\.#].*          { sass_create_tag_node(strdup(yytext)); }
+[^ \t\r\n\f\:\.#].*          { sass_create_selector_node(strdup(yytext)); }
 .                            { /*printf("unknown char %s\n",yytext);*/}
 %%
 
@@ -39,7 +40,7 @@ sass_node_t *sass_parse_file(char *name) {
         printf("Opened file %s\n", name);
     }
     if ( ! sass_root_node ) {
-        sass_root_node = sass_init_node("_r00t_",0);
+        sass_root_node = sass_init_node("_r00t_", -2);
         sass_last_created_node = sass_root_node;
         //printf("creating root node %X since not present\n", sass_root_node);
     }
@@ -51,7 +52,7 @@ sass_node_t *sass_parse_file(char *name) {
     return sass_root_node;
 }
 
-int sass_create_tag_node(char *sass_string) {
+int sass_create_selector_node(char *sass_string) {
     printf("\nsass_create_tag_node, sass string is %s\n", sass_string);
     
     sass_node_t *parent;
@@ -59,13 +60,13 @@ int sass_create_tag_node(char *sass_string) {
     parent = sass_find_parent(sass_last_created_node);
     //printf("sass_find_parent says: %X\n", parent);
     sass_last_created_node = sass_append_new_node(parent, sass_string);
+    sass_current_whitespace_length = 0;
     return 0;
 }
 
 sass_node_t *sass_find_parent(sass_node_t *current_node) {
-    //printf(" sass_find_parent:  %X\n", current_node);
-    if (current_node->parent == 0) {
-        // this is the root node
+    printf(" sass_find_parent:  %X\n", current_node);
+    if (current_node->selector_name == "_r00t_") {
         return current_node;
     }
     if (current_node->ws > sass_current_whitespace_length - 2) {
@@ -75,7 +76,8 @@ sass_node_t *sass_find_parent(sass_node_t *current_node) {
     }
 }
 
-sass_node_t * sass_init_node(char *selector_name, int ws) {  
+sass_node_t * sass_init_node(char *selector_name, int ws) {
+    //printf("    sass_init_node %s %i\n", selector_name, ws);
     sass_node_t *node = malloc(sizeof(sass_node_t));
     node->children  = malloc(sizeof(sass_node_t) * 5);
     node->attrs     = malloc(sizeof(sass_attr_t) * 5);
@@ -113,6 +115,7 @@ sass_node_t * sass_append_new_node(sass_node_t *parent, char *selector_name) {
 }
 
 int sass_append_new_attr(char *attr_string) {
+    printf("sass_append_new_attr %s\n", attr_string);
     sass_node_t *n;
     sass_attr_t *new_attr;
     char * token;
@@ -132,9 +135,10 @@ int sass_append_new_attr(char *attr_string) {
         n->max_attrs = n->max_attrs + ceil((n->max_attrs * 0.33));
         n->attrs = realloc(n->attrs, n->max_attrs * sizeof(sass_attr_t));
     }
+    sass_current_whitespace_length = 0;
 }
 
-int sass_as_css(sass_node_t *node, int depth) {
+char *sass_as_css(sass_node_t *node, int depth) {
     char *result = malloc(sizeof(char));
     char *tmp;
     char *spaces = " ";
@@ -142,23 +146,24 @@ int sass_as_css(sass_node_t *node, int depth) {
     result[0] = 0x00;
     
     for( i=0; i<node->child_count; i++ ) {
-      printf("as_css %i %s %i\n", depth, node->selector_name, node->child_count);
+      //printf("as_css %i %s %i\n", depth, node->selector_name, node->child_count);
       char *children_result = sass_as_css(node->children[i], ++depth);
       tmp = sass_append_string_with_newline(spaces, result, children_result);
       free(result);
       free(children_result);
       result = tmp;
-      
     }
     
-/*    if( strcmp(node->selector_name, "_r00t_") != 0) {
+    if( strcmp(node->selector_name, "_r00t_") != 0) {
       char *fmt = "%s { %s }\n";
       int len = strlen(node->selector_name) + strlen(result) + strlen(fmt) + strlen(spaces);
       char *nres = malloc(sizeof(char) * len);
-      sprintf(nres, fmt, node->selector_name, "xxx");
-      printf("sss   %s", nres);
+      sprintf(nres, fmt, node->selector_name, result);
+      //printf("sss   %s", nres);
       return nres;
-    }*/
+    } else {
+      return result; // when this function is called with the root node
+    }
 }
 
 char *sass_append_string_with_newline(char *spaces, char *s1, char *s2) {
@@ -179,19 +184,21 @@ int sass_print_tree(sass_node_t *current_node, int recursion_depth) {
         spaces[i] = 0x20;
     }
     spaces[i] = 0x00;
+    recursion_depth++;
 
 
-    char * fmt = "%s<Node#%X selector_name: '%s', child_count: %i, attr_count: %i, ws: %i>\n";
+    char * fmt = "%s<Node#%X selector_name: '%s', child_count: %i, attr_count: %i, ws: %i, parent: %X>\n";
     printf(fmt, spaces, 
                 n,
                 n->selector_name,
                 n->child_count,
                 n->attr_count,
-                n->ws
+                n->ws,
+                n->parent
                 );
     
     for (i=0; i<(n->child_count); i++) {
         c = n->children[i];
-        sass_print_tree(c, ++recursion_depth);
+        sass_print_tree(c, recursion_depth);
     }
 }

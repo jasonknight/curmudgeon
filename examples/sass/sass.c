@@ -9,5 +9,5 @@ int main(void) {
     printf("%s\n\n", templatepath);
     sass_node_t * sass_root_node = sass_parse_file(templatepath); 
     sass_print_tree(sass_root_node, 0);
-    sass_as_css(sass_root_node, 0);
+    printf("%s", sass_as_css(sass_root_node, 0));
 }
