@@ -85,7 +85,7 @@ AC_CONFIG_FILES([Makefile                         \
                 examples/json/Makefile            \
                 examples/tidy/Makefile            \
                 examples/haml/Makefile            \
-                examples/sass/Makefile            \
+                examples/sauce/Makefile           \
                 examples/options/Makefile         \
                 examples/regex/Makefile           \
                 examples/schema/Makefile          \

@@ -1,1 +1,1 @@
-SUBDIRS = json options regex schema haml sass tidy
+SUBDIRS = json options regex schema haml sauce tidy
