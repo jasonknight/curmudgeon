@@ -1,40 +1,40 @@
 #ifndef SASS_H
 #define SASS_H
 
-typedef struct sass_node sass_node_t;
-typedef struct sass_attr sass_attr_t;
+typedef struct sauce_node sauce_node_t;
+typedef struct sauce_attr sauce_attr_t;
 
-struct sass_node {
+struct sauce_node {
     char           *selector_name;
     int             ws; /**< how much whitespace preceded this tag */
     int             child_count;
     int             max_children;
     int             attr_count;
     int             max_attrs;
-    sass_attr_t     **attrs;
-    sass_node_t     **children;
-    sass_node_t     *parent;
+    sauce_attr_t     **attrs;
+    sauce_node_t     **children;
+    sauce_node_t     *parent;
 };
 
-struct sass_attr {
+struct sauce_attr {
     char           *key;
     char           *val;
 };
 
-sass_node_t    *sass_parse_file(char *name);
-sass_node_t    *sass_init_node(char *selector_name, int ws);
-sass_node_t    *sass_find_parent(sass_node_t * current_node);
-sass_node_t    *sass_append_new_node(sass_node_t *parent, char *selector_name);
-int             sass_append_new_attr(char *attr_string);
-int             sass_create_selector_node(char *sass_string);
-int             sass_print_tree(sass_node_t *current_node, int recursion_depth);
-char           *sass_append_string_with_newline(char *spaces, char *s1, char *s2);
-char           *sass_as_css(sass_node_t *node, int depth);
+sauce_node_t    *sauce_parse_file(char *name);
+sauce_node_t    *sauce_init_node(char *selector_name, int ws);
+sauce_node_t    *sauce_find_parent(sauce_node_t * current_node);
+sauce_node_t    *sauce_append_new_node(sauce_node_t *parent, char *selector_name);
+int             sauce_append_new_attr(char *attr_string);
+int             sauce_create_selector_node(char *sauce_string);
+int             sauce_print_tree(sauce_node_t *current_node, int recursion_depth);
+char           *sauce_append_string_with_newline(char *spaces, char *s1, char *s2);
+char           *sauce_as_css(sauce_node_t *node, int depth);
 
 // File-global variables
-static sass_node_t *sass_root_node;
-static sass_node_t *sass_last_created_node;
-static sass_node_t *sass_last_created_node_indented;
-static int          sass_current_whitespace_length;
+static sauce_node_t *sauce_root_node;
+static sauce_node_t *sauce_last_created_node;
+static sauce_node_t *sauce_last_created_node_indented;
+static int          sauce_current_whitespace_length;
 
 #endif

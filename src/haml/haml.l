@@ -207,7 +207,7 @@ int haml_set_whitespace(char * whitespace_string) {
 }
 
 haml_node_t * haml_find_parent(haml_node_t * current_node) {
-    if (current_node->parent == 0) {
+    if (current_node->tag_name == "_r00t_") {
         return current_node;
     }
     if (current_node->ws > haml_current_whitespace_length - 2) {
